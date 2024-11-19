@@ -1,0 +1,18 @@
+Package: xnatR
+Type: Package
+Title: Interface with XNAT Systems
+Version: 0.1.0
+Author: Bradley Buchsbaum
+Maintainer: Bradley Buchsbaum <brad.buchsbaum@gmail.com>
+Description: An R package for interacting with XNAT systems via the REST API, including data exploration, listing, plotting, graphing, and a Shiny interface.
+License: MIT
+Imports:
+    httr,
+    jsonlite,
+    dplyr,
+    ggplot2,
+    shiny,
+    shinydashboard,
+    plotly,
+    base64enc
+RoxygenNote: 7.3.1
