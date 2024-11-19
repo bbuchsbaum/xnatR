@@ -1,3 +1,5 @@
+# File: R/authenticate.R
+
 #' Authenticate with XNAT and Cache Credentials
 #'
 #' Authenticates with the XNAT server using credentials from the config file or provided directly.
@@ -7,10 +9,11 @@
 #' @param username The username for XNAT authentication. If `NULL`, loaded from config.
 #' @param password The password for XNAT authentication. Overrides config if provided.
 #' @param token An API token for XNAT authentication. Overrides config if provided.
+#' @param ssl_verify Logical. Whether to verify SSL certificates. Defaults to `TRUE`.
 #'
 #' @return Invisibly returns `TRUE` if authentication is successful. Stops execution if it fails.
 #' @export
-authenticate_xnat <- function(base_url = NULL, username = NULL, password = NULL, token = NULL) {
+authenticate_xnat <- function(base_url = NULL, username = NULL, password = NULL, token = NULL, ssl_verify = TRUE) {
   # If any parameter is NULL, attempt to load from config
   if (is.null(base_url) || is.null(username)) {
     creds <- try(load_credentials(), silent = TRUE)
@@ -25,6 +28,7 @@ authenticate_xnat <- function(base_url = NULL, username = NULL, password = NULL,
       password <- creds$password
       token <- creds$token
     }
+    if (missing(ssl_verify)) ssl_verify <- creds$ssl_verify
   }
 
   if (is.null(password) && is.null(token)) {
@@ -35,25 +39,30 @@ authenticate_xnat <- function(base_url = NULL, username = NULL, password = NULL,
   if (!is.null(password)) {
     # Basic Authentication
     auth_string <- paste0(username, ":", password)
-    auth_encoded <- base64enc::base64encode(charToRaw(auth_string))
-    auth_header <- paste("Basic", auth_encoded)
   } else {
-    # Token-Based Authentication (assuming the server accepts tokens via Basic Auth)
+    # Token-Based Authentication
     auth_string <- paste0(username, ":", token)
-    auth_encoded <- base64enc::base64encode(charToRaw(auth_string))
-    auth_header <- paste("Basic", auth_encoded)
   }
+  auth_encoded <- base64enc::base64encode(charToRaw(auth_string))
+  auth_header <- paste("Basic", auth_encoded)
 
   # Correctly concatenate the base_url with the API path
   base_url <- sub("/+$", "", base_url)  # Remove trailing slash if any
   projects_url <- paste0(base_url, "/data/projects")
 
-  # Perform the GET request with preemptive auth and SSL verification disabled
+  # Set SSL verification
+  ssl_config <- if (ssl_verify) {
+    httr::config()
+  } else {
+    httr::config(ssl_verifypeer = FALSE)
+  }
+
+  # Perform the GET request with preemptive auth
   response <- httr::GET(
     url = projects_url,
     httr::add_headers(Authorization = auth_header),
-    httr::config(ssl_verifypeer = FALSE),  # Disable SSL verification (use with caution)
-    httr::verbose()
+    ssl_config,
+    httr::accept("application/json")
   )
 
   # Check the response status
@@ -66,13 +75,12 @@ authenticate_xnat <- function(base_url = NULL, username = NULL, password = NULL,
   # Store credentials in the package environment
   xnatR_env$auth_header <- auth_header
   xnatR_env$base_url <- base_url
+  xnatR_env$ssl_verify <- ssl_verify
 
   message("Authentication successful.")
 
   invisible(TRUE)
 }
-
-
 
 #' Download Files from XNAT
 #'

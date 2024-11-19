@@ -1,44 +1,39 @@
+# File: R/search_projects.R
 
-
-#' Search and Order XNAT Projects
+#' Search XNAT Projects by Substring
 #'
-#' Retrieves projects containing a specific substring in their ID or Label and orders them by date.
+#' Retrieves projects containing a specific substring in their ID or Name.
 #'
-#' @param substring A character string to search for within project IDs or Labels.
-#' @param order_by_date Logical. If `TRUE`, orders the results by the most recent date first. Defaults to `TRUE`.
-#' @param date_field The date field to use for ordering (e.g., "creationDate", "lastUpdate"). Defaults to "creationDate".
+#' @param substring A character string to search for within project IDs or Names.
 #'
-#' @return A data frame of projects that match the substring, ordered by the specified date field.
+#' @return A data frame of projects that match the substring.
 #' @examples
 #' \dontrun{
 #'   authenticate_xnat()
-#'   results <- search_projects(substring = "Test", order_by_date = TRUE)
+#'   results <- search_projects(substring = "Test")
 #'   print(results)
 #' }
 #' @export
-#' @import dplyr
 search_projects <- function(substring) {
   # Validate inputs
   if (missing(substring) || !is.character(substring)) {
-    stop("Please provide a valid `substring` as a character string.", call. = FALSE)
+    stop("Please provide a valid 'substring' as a character string.", call. = FALSE)
   }
 
   # Retrieve all projects
   all_projects <- list_projects()
 
-
-  # Filter projects containing the substring in ID or Label (case-insensitive)
-  filtered_projects <- all_projects %>%
-    dplyr::filter(
-      grepl(substring, ID, ignore.case = TRUE)
-    ) %>% arrange(desc(ID))
+  # Filter projects containing the substring in ID or Name (case-insensitive)
+  filtered_projects <- dplyr::filter(
+    all_projects,
+    grepl(substring, ID, ignore.case = TRUE) | grepl(substring, name, ignore.case = TRUE)
+  )
 
   # Check if any projects match the criteria
   if (nrow(filtered_projects) == 0) {
     warning(paste("No projects found containing the substring '", substring, "'.", sep = ""))
     return(filtered_projects)  # Returns an empty data frame
   }
-
 
   return(filtered_projects)
 }

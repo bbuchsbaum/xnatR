@@ -1,3 +1,5 @@
+# File: R/list_scans.R
+
 #' List XNAT Scans
 #'
 #' Retrieves a list of scans from a specific experiment, subject, and project on the authenticated XNAT server.
@@ -17,47 +19,53 @@
 list_scans <- function(project_id, subject_id, experiment_id) {
   # Validate inputs
   if (missing(project_id) || !is.character(project_id)) {
-    stop("Please provide a valid `project_id` as a character string.", call. = FALSE)
+    stop("Please provide a valid 'project_id' as a character string.", call. = FALSE)
   }
   if (missing(subject_id) || !is.character(subject_id)) {
-    stop("Please provide a valid `subject_id` as a character string.", call. = FALSE)
+    stop("Please provide a valid 'subject_id' as a character string.", call. = FALSE)
   }
   if (missing(experiment_id) || !is.character(experiment_id)) {
-    stop("Please provide a valid `experiment_id` as a character string.", call. = FALSE)
+    stop("Please provide a valid 'experiment_id' as a character string.", call. = FALSE)
   }
 
   # Check authentication
   if (is.null(xnatR_env$auth_header) || is.null(xnatR_env$base_url)) {
-    stop("Not authenticated. Please run `authenticate_xnat()` first.", call. = FALSE)
+    stop("Not authenticated. Please run 'authenticate_xnat()' first.", call. = FALSE)
   }
 
   # Construct the API endpoint
   scans_url <- sprintf(
     "%s/data/projects/%s/subjects/%s/experiments/%s/scans",
     xnatR_env$base_url,
-    URLencode(project_id, reserved = TRUE),
-    URLencode(subject_id, reserved = TRUE),
-    URLencode(experiment_id, reserved = TRUE)
+    utils::URLencode(project_id, reserved = TRUE),
+    utils::URLencode(subject_id, reserved = TRUE),
+    utils::URLencode(experiment_id, reserved = TRUE)
   )
 
+  # Set SSL verification
+  ssl_config <- if (xnatR_env$ssl_verify) {
+    httr::config()
+  } else {
+    httr::config(ssl_verifypeer = FALSE)
+  }
+
   # Perform the GET request
-  response <- GET(
+  response <- httr::GET(
     url = scans_url,
-    add_headers(Authorization = xnatR_env$auth_header),
-    config(ssl_verifypeer = FALSE),
-    accept("application/json"),
-    verbose()
+    httr::add_headers(Authorization = xnatR_env$auth_header),
+    ssl_config,
+    httr::accept("application/json")
   )
 
   # Check if the request was successful
-  if (status_code(response) != 200) {
-    print(content(response, as = "text", encoding = "UTF-8"))
+  if (httr::status_code(response) != 200) {
+    print(httr::content(response, as = "text", encoding = "UTF-8"))
     stop("Failed to retrieve scans.", call. = FALSE)
   }
 
   # Parse the response
-  content_json <- content(response, as = "text", encoding = "UTF-8")
-  content_parsed <- fromJSON(content_json, flatten = TRUE)
+  content_json <- httr::content(response, as = "text", encoding = "UTF-8")
+  content_parsed <- jsonlite::fromJSON(content_json, flatten = TRUE)
 
   # Extract scan details
   if (!is.null(content_parsed$ResultSet$Result)) {

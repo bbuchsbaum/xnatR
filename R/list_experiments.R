@@ -1,23 +1,27 @@
-# File: R/list_subjects.R
+# File: R/list_experiments.R
 
-#' List XNAT Subjects
+#' List Experiments for a Subject
 #'
-#' Retrieves a list of subjects from a specific project on the authenticated XNAT server.
+#' Retrieves a list of experiments for a specific subject within a project on the authenticated XNAT server.
 #'
-#' @param project_id The ID of the project (e.g., "TEST").
+#' @param project_id The ID of the project.
+#' @param subject_id The ID of the subject.
 #'
-#' @return A data frame containing subject details (e.g., ID, Label, Gender, Age).
+#' @return A data frame containing experiment details (e.g., ID, Label).
 #' @examples
 #' \dontrun{
 #'   authenticate_xnat()
-#'   subjects <- list_subjects(project_id = "TEST")
-#'   print(subjects)
+#'   experiments <- list_experiments(project_id = "TEST", subject_id = "SUBJECT_ID")
+#'   print(experiments)
 #' }
 #' @export
-list_subjects <- function(project_id) {
-  # Validate input
+list_experiments <- function(project_id, subject_id) {
+  # Validate inputs
   if (missing(project_id) || !is.character(project_id)) {
     stop("Please provide a valid 'project_id' as a character string.", call. = FALSE)
+  }
+  if (missing(subject_id) || !is.character(subject_id)) {
+    stop("Please provide a valid 'subject_id' as a character string.", call. = FALSE)
   }
 
   # Check authentication
@@ -26,10 +30,11 @@ list_subjects <- function(project_id) {
   }
 
   # Construct the API endpoint
-  subjects_url <- sprintf(
-    "%s/data/projects/%s/subjects",
+  experiments_url <- sprintf(
+    "%s/data/projects/%s/subjects/%s/experiments",
     xnatR_env$base_url,
-    utils::URLencode(project_id, reserved = TRUE)
+    utils::URLencode(project_id, reserved = TRUE),
+    utils::URLencode(subject_id, reserved = TRUE)
   )
 
   # Set SSL verification
@@ -41,7 +46,7 @@ list_subjects <- function(project_id) {
 
   # Perform the GET request
   response <- httr::GET(
-    url = subjects_url,
+    url = experiments_url,
     httr::add_headers(Authorization = xnatR_env$auth_header),
     ssl_config,
     httr::accept("application/json")
@@ -50,18 +55,18 @@ list_subjects <- function(project_id) {
   # Check if the request was successful
   if (httr::status_code(response) != 200) {
     print(httr::content(response, as = "text", encoding = "UTF-8"))
-    stop("Failed to retrieve subjects.", call. = FALSE)
+    stop("Failed to retrieve experiments.", call. = FALSE)
   }
 
   # Parse the response
   content_json <- httr::content(response, as = "text", encoding = "UTF-8")
   content_parsed <- jsonlite::fromJSON(content_json, flatten = TRUE)
 
-  # Extract subject details
+  # Extract experiment details
   if (!is.null(content_parsed$ResultSet$Result)) {
-    subjects_df <- as.data.frame(content_parsed$ResultSet$Result)
-    return(subjects_df)
+    experiments_df <- as.data.frame(content_parsed$ResultSet$Result)
+    return(experiments_df)
   } else {
-    stop("Unexpected response format when retrieving subjects.", call. = FALSE)
+    stop("Unexpected response format when retrieving experiments.", call. = FALSE)
   }
 }
