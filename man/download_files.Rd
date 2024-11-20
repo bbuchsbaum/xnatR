@@ -8,7 +8,7 @@ download_files(
   project_id,
   subject_id,
   experiment_id,
-  scan_id,
+  scan_id = "ALL",
   resource = NULL,
   format = "zip",
   dest_dir = getwd()
@@ -21,7 +21,7 @@ download_files(
 
 \item{experiment_id}{The ID of the experiment.}
 
-\item{scan_id}{The ID of the scan (use "ALL" for all scans).}
+\item{scan_id}{The ID of the scan (use "ALL" for all scans). Defaults to "ALL".}
 
 \item{resource}{Optional resource name (e.g., "DICOM"). Use `NULL` to download all resources.}
 

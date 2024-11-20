@@ -2,27 +2,23 @@
 % Please edit documentation in R/search_projects.R
 \name{search_projects}
 \alias{search_projects}
-\title{Search and Order XNAT Projects}
+\title{Search XNAT Projects by Substring}
 \usage{
 search_projects(substring)
 }
 \arguments{
-\item{substring}{A character string to search for within project IDs or Labels.}
-
-\item{order_by_date}{Logical. If `TRUE`, orders the results by the most recent date first. Defaults to `TRUE`.}
-
-\item{date_field}{The date field to use for ordering (e.g., "creationDate", "lastUpdate"). Defaults to "creationDate".}
+\item{substring}{A character string to search for within project IDs or Names.}
 }
 \value{
-A data frame of projects that match the substring, ordered by the specified date field.
+A data frame of projects that match the substring.
 }
 \description{
-Retrieves projects containing a specific substring in their ID or Label and orders them by date.
+Retrieves projects containing a specific substring in their ID or Name.
 }
 \examples{
 \dontrun{
   authenticate_xnat()
-  results <- search_projects(substring = "Test", order_by_date = TRUE)
+  results <- search_projects(substring = "Test")
   print(results)
 }
 }

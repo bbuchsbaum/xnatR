@@ -7,7 +7,7 @@
 list_projects()
 }
 \value{
-A data frame containing project details (e.g., ID, Label, Description).
+A data frame containing project details (e.g., ID, Name, Description).
 }
 \description{
 Retrieves a list of projects from the authenticated XNAT server.

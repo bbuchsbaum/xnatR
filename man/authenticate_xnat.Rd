@@ -8,7 +8,8 @@ authenticate_xnat(
   base_url = NULL,
   username = NULL,
   password = NULL,
-  token = NULL
+  token = NULL,
+  ssl_verify = TRUE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ authenticate_xnat(
 \item{password}{The password for XNAT authentication. Overrides config if provided.}
 
 \item{token}{An API token for XNAT authentication. Overrides config if provided.}
+
+\item{ssl_verify}{Logical. Whether to verify SSL certificates. Defaults to `TRUE`.}
 }
 \value{
 Invisibly returns `TRUE` if authentication is successful. Stops execution if it fails.
