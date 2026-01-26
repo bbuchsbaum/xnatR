@@ -95,49 +95,49 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | — | Pending |
-| AUTH-02 | — | Pending |
-| AUTH-03 | — | Pending |
-| AUTH-04 | — | Pending |
-| AUTH-05 | — | Pending |
-| AUTH-06 | — | Pending |
-| AUTH-07 | — | Pending |
-| AUTH-08 | — | Pending |
-| AUTH-09 | — | Pending |
-| AUTH-10 | — | Pending |
-| AUTH-11 | — | Pending |
-| HTTP-01 | — | Pending |
-| HTTP-02 | — | Pending |
-| HTTP-03 | — | Pending |
-| HTTP-04 | — | Pending |
-| QURY-01 | — | Pending |
-| QURY-02 | — | Pending |
-| QURY-03 | — | Pending |
-| QURY-04 | — | Pending |
-| QURY-05 | — | Pending |
-| QURY-06 | — | Pending |
-| SRCH-01 | — | Pending |
-| SRCH-02 | — | Pending |
-| SRCH-03 | — | Pending |
-| SRCH-04 | — | Pending |
-| DWNL-01 | — | Pending |
-| DWNL-02 | — | Pending |
-| DWNL-03 | — | Pending |
-| DWNL-04 | — | Pending |
-| DWNL-05 | — | Pending |
-| DWNL-06 | — | Pending |
-| DWNL-07 | — | Pending |
-| QUAL-01 | — | Pending |
-| QUAL-02 | — | Pending |
-| QUAL-03 | — | Pending |
-| QUAL-04 | — | Pending |
-| QUAL-05 | — | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| AUTH-05 | Phase 1 | Pending |
+| AUTH-06 | Phase 1 | Pending |
+| AUTH-07 | Phase 1 | Pending |
+| AUTH-08 | Phase 1 | Pending |
+| AUTH-09 | Phase 1 | Pending |
+| AUTH-10 | Phase 1 | Pending |
+| AUTH-11 | Phase 1 | Pending |
+| HTTP-01 | Phase 1 | Pending |
+| HTTP-02 | Phase 1 | Pending |
+| HTTP-03 | Phase 1 | Pending |
+| HTTP-04 | Phase 1 | Pending |
+| QURY-01 | Phase 2 | Pending |
+| QURY-02 | Phase 2 | Pending |
+| QURY-03 | Phase 2 | Pending |
+| QURY-04 | Phase 2 | Pending |
+| QURY-05 | Phase 2 | Pending |
+| QURY-06 | Phase 2 | Pending |
+| SRCH-01 | Phase 3 | Pending |
+| SRCH-02 | Phase 3 | Pending |
+| SRCH-03 | Phase 3 | Pending |
+| SRCH-04 | Phase 3 | Pending |
+| DWNL-01 | Phase 4 | Pending |
+| DWNL-02 | Phase 4 | Pending |
+| DWNL-03 | Phase 4 | Pending |
+| DWNL-04 | Phase 4 | Pending |
+| DWNL-05 | Phase 4 | Pending |
+| DWNL-06 | Phase 4 | Pending |
+| DWNL-07 | Phase 4 | Pending |
+| QUAL-01 | Phase 4 | Pending |
+| QUAL-02 | Phase 4 | Pending |
+| QUAL-03 | Phase 4 | Pending |
+| QUAL-04 | Phase 4 | Pending |
+| QUAL-05 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 37 total
-- Mapped to phases: 0
-- Unmapped: 37 ⚠️
+- Mapped to phases: 37
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-01-26*
-*Last updated: 2026-01-26 after initial definition*
+*Last updated: 2026-01-26 after roadmap creation*
