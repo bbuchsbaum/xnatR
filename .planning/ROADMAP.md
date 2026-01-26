@@ -33,11 +33,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. User can generate, validate, and invalidate alias tokens programmatically
   5. All HTTP requests use centralized helper with consistent auth, SSL, retry, and error handling
 
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md -- HTTP infrastructure foundation (errors, request helper, environment, DESCRIPTION)
+- [ ] 01-02-PLAN.md -- Authentication with credential resolution, JSESSION sessions, logout, alias tokens
 
 ### Phase 2: Query & Discovery
 **Goal**: Researchers can list any XNAT resource and discover available data types and queryable fields programmatically.
@@ -104,7 +104,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Auth & HTTP Infrastructure | 0/TBD | Not started | - |
+| 1. Auth & HTTP Infrastructure | 0/2 | Not started | - |
 | 2. Query & Discovery | 0/TBD | Not started | - |
 | 3. Search API | 0/TBD | Not started | - |
 | 4. Download & Quality | 0/TBD | Not started | - |
