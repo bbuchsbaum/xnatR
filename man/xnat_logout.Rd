@@ -19,6 +19,9 @@ Clears stored credentials and optionally invalidates the server session.
 \examples{
 \dontrun{
 xnat_logout()
+
+# Also invalidate server session
+xnat_logout(invalidate_session = TRUE)
 }
 
 }

@@ -9,22 +9,27 @@ authenticate_xnat(
   username = NULL,
   password = NULL,
   ssl_verify = TRUE,
-  verify = TRUE
+  verify = TRUE,
+  use_jsession = FALSE
 )
 }
 \arguments{
 \item{base_url}{The base URL of the XNAT server (e.g., "https://central.xnat.org").
-If NULL, checks XNATR_HOST environment variable, then config file.}
+If NULL, checks XNATR_HOST environment variable, then config file, then .netrc.}
 
 \item{username}{XNAT username. If NULL, checks XNATR_USER environment variable,
-then config file.}
+then config file, then .netrc. For XNAT 1.8+ with auth providers, use
+"provider/username" format.}
 
 \item{password}{XNAT password. If NULL, checks XNATR_PASS environment variable,
-then config file.}
+then config file, then .netrc.}
 
 \item{ssl_verify}{Whether to verify SSL certificates. Default TRUE.}
 
 \item{verify}{Whether to verify credentials by making a test request. Default TRUE.}
+
+\item{use_jsession}{Whether to establish a JSESSION cookie-based session instead
+of using Basic Auth for each request. Can improve performance. Default FALSE.}
 }
 \value{
 Invisibly returns TRUE if authentication is successful.
@@ -47,6 +52,24 @@ authenticate_xnat()
 
 # Using config file (~/.xnatR_config.yml)
 authenticate_xnat()
+
+# Using .netrc file
+authenticate_xnat(base_url = "https://central.xnat.org")
+
+# With JSESSION for better performance
+authenticate_xnat(
+  base_url = "https://central.xnat.org",
+  username = "myuser",
+  password = "mypass",
+  use_jsession = TRUE
+)
+
+# XNAT 1.8+ with auth provider
+authenticate_xnat(
+  base_url = "https://myxnat.org",
+  username = "ldap/myuser",
+  password = "mypass"
+)
 }
 
 }
