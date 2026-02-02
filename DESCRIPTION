@@ -2,6 +2,8 @@ Package: xnatR
 Type: Package
 Title: Interface with XNAT Systems
 Version: 0.2.0
+Author: Bradley Buchsbaum [aut, cre]
+Maintainer: Bradley Buchsbaum <brad.buchsbaum@gmail.com>
 Authors@R: person("Bradley", "Buchsbaum",
     email = "brad.buchsbaum@gmail.com",
     role = c("aut", "cre"))
@@ -27,3 +29,4 @@ Suggests:
     knitr,
     rmarkdown
 Config/testthat/edition: 3
+VignetteBuilder: knitr
