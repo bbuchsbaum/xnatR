@@ -1,18 +1,29 @@
 Package: xnatR
 Type: Package
 Title: Interface with XNAT Systems
-Version: 0.1.0
-Author: Bradley Buchsbaum
-Maintainer: Bradley Buchsbaum <brad.buchsbaum@gmail.com>
-Description: An R package for interacting with XNAT systems via the REST API, including data exploration, listing, plotting, graphing, and a Shiny interface.
-License: MIT
+Version: 0.2.0
+Authors@R: person("Bradley", "Buchsbaum",
+    email = "brad.buchsbaum@gmail.com",
+    role = c("aut", "cre"))
+Description: An R package for interacting with XNAT systems via the REST API.
+    Provides functions to authenticate, list projects/subjects/experiments/scans,
+    search, and download data from XNAT neuroimaging archives.
+License: MIT + file LICENSE
+URL: https://github.com/bbuchsbaum/xnatR
+BugReports: https://github.com/bbuchsbaum/xnatR/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
 Imports:
-    httr,
-    jsonlite,
-    dplyr,
-    ggplot2,
-    shiny,
-    shinydashboard,
-    plotly,
-    base64enc
-RoxygenNote: 7.3.1
+    httr2 (>= 1.0.0),
+    tibble,
+    yaml,
+    cli,
+    rlang
+Suggests:
+    testthat (>= 3.0.0),
+    httptest2,
+    withr,
+    knitr,
+    rmarkdown
+Config/testthat/edition: 3

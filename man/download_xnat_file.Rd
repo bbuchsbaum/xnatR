@@ -2,26 +2,29 @@
 % Please edit documentation in R/download.R
 \name{download_xnat_file}
 \alias{download_xnat_file}
-\title{Download File from XNAT}
+\title{Download a Single File from XNAT}
 \usage{
-download_xnat_file(url, dest_file)
+download_xnat_file(url, dest_file, progress = TRUE)
 }
 \arguments{
-\item{url}{The full URL to the file resource you want to download.}
+\item{url}{Full URL to the file, or a path relative to the XNAT base URL.}
 
-\item{dest_file}{The destination path where the downloaded file will be saved.}
+\item{dest_file}{Destination file path.}
+
+\item{progress}{Show download progress bar. Default TRUE.}
 }
 \value{
-Invisibly returns the response object if successful. Stops execution if the download fails.
+Invisibly returns the destination path.
 }
 \description{
-Downloads a file from the XNAT server using the authenticated session.
+Downloads a file using its full URL or a pre-constructed path.
 }
 \examples{
 \dontrun{
 download_xnat_file(
-  url = "https://your-xnat-server/data/projects/PROJECT_ID/subjects/SUBJECT_ID/experiments/EXPERIMENT_ID/scans/SCAN_ID/resources/RESOURCE_ID/files/FILE_NAME",
-  dest_file = "downloaded_file.zip"
+  url = "/data/projects/P1/subjects/S1/experiments/E1/scans/1/resources/DICOM/files/file.dcm",
+  dest_file = "file.dcm"
 )
 }
+
 }

@@ -1,2 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^\.planning$
+^R/legacy$
+^LICENSE\.md$
+^README\.Rmd$
+^\.github$
