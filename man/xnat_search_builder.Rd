@@ -4,10 +4,12 @@
 \alias{xnat_search_builder}
 \title{Search Builder - Fluent Interface}
 \usage{
-xnat_search_builder(root_type)
+xnat_search_builder(root_type, client = NULL)
 }
 \arguments{
 \item{root_type}{The XSI type to search.}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 A search builder object.

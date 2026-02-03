@@ -4,7 +4,10 @@
 \alias{is_authenticated}
 \title{Check if authenticated}
 \usage{
-is_authenticated()
+is_authenticated(client = NULL)
+}
+\arguments{
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 TRUE if credentials are stored, FALSE otherwise.

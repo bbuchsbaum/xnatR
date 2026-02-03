@@ -4,7 +4,10 @@
 \alias{xnat_server}
 \title{Get current XNAT server URL}
 \usage{
-xnat_server()
+xnat_server(client = NULL)
+}
+\arguments{
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 The current server URL or NULL if not authenticated.

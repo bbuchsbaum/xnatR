@@ -4,6 +4,7 @@
 #'
 #' @param pattern A character string to search for (case-insensitive).
 #' @param columns Character vector of column names to include.
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #'
 #' @return A tibble of class `xnat_projects` containing matching projects.
 #'
@@ -20,11 +21,11 @@
 #' }
 #'
 #' @export
-search_projects <- function(pattern, columns = NULL) {
+search_projects <- function(pattern, columns = NULL, client = NULL) {
   check_string(pattern, "pattern")
 
   # Get all projects
-  projects <- list_projects(columns = columns)
+  projects <- list_projects(columns = columns, client = client)
 
   if (nrow(projects) == 0) {
     cli::cli_alert_warning("No projects found.")
@@ -73,6 +74,7 @@ search_projects <- function(pattern, columns = NULL) {
 #'   - `comparison`: One of "EQUALS", "LIKE", "GREATER_THAN", "LESS_THAN"
 #'   - `value`: Value to compare
 #' @param format Output format: "json" (default) or "csv".
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #'
 #' @return A tibble containing the search results.
 #'
@@ -101,7 +103,7 @@ search_projects <- function(pattern, columns = NULL) {
 #' }
 #'
 #' @export
-xnat_search <- function(root_type, fields, criteria = NULL, format = "json") {
+xnat_search <- function(root_type, fields, criteria = NULL, format = "json", client = NULL) {
   check_string(root_type, "root_type")
   check_character(fields, "fields")
 
@@ -109,7 +111,7 @@ xnat_search <- function(root_type, fields, criteria = NULL, format = "json") {
   xml <- build_search_xml(root_type, fields, criteria)
 
   # Execute search
-  req <- xnat_request("data/search") |>
+  req <- xnat_request("data/search", client = client) |>
     httr2::req_method("POST") |>
     httr2::req_headers(`Content-Type` = "text/xml") |>
     httr2::req_url_query(format = format) |>
@@ -135,13 +137,32 @@ xnat_search <- function(root_type, fields, criteria = NULL, format = "json") {
 #' @return XML string
 #' @noRd
 build_search_xml <- function(root_type, fields, criteria = NULL) {
+  xml_escape <- function(x) {
+    x <- as.character(x)
+    x <- gsub("&", "&amp;", x, fixed = TRUE)
+    x <- gsub("<", "&lt;", x, fixed = TRUE)
+    x <- gsub(">", "&gt;", x, fixed = TRUE)
+    x <- gsub("\"", "&quot;", x, fixed = TRUE)
+    x <- gsub("'", "&apos;", x, fixed = TRUE)
+    x
+  }
+
   # Build search fields
   fields_xml <- vapply(fields, function(f) {
-    sprintf('    <xdat:search_field>
-      <xdat:element_name>%s</xdat:element_name>
-      <xdat:field_ID>%s</xdat:field_ID>
-      <xdat:sequence>0</xdat:sequence>
-    </xdat:search_field>', root_type, f)
+    element_name <- root_type
+    if (grepl("/", f, fixed = TRUE)) {
+      element_name <- sub("/.*$", "", f)
+    }
+    field_id <- f
+
+    sprintf('  <xdat:search_field>
+    <xdat:element_name>%s</xdat:element_name>
+    <xdat:field_ID>%s</xdat:field_ID>
+    <xdat:sequence>0</xdat:sequence>
+  </xdat:search_field>',
+      xml_escape(element_name),
+      xml_escape(field_id)
+    )
   }, character(1))
 
   # Build criteria
@@ -152,7 +173,11 @@ build_search_xml <- function(root_type, fields, criteria = NULL) {
         <xdat:schema_field>%s</xdat:schema_field>
         <xdat:comparison_type>%s</xdat:comparison_type>
         <xdat:value>%s</xdat:value>
-      </xdat:criteria>', c$field, c$comparison, c$value)
+      </xdat:criteria>',
+        xml_escape(c$field),
+        xml_escape(c$comparison),
+        xml_escape(c$value)
+      )
     }, character(1))
 
     criteria_xml <- sprintf('  <xdat:search_where method="AND">
@@ -166,11 +191,9 @@ build_search_xml <- function(root_type, fields, criteria = NULL) {
   xmlns:xdat="http://nrg.wustl.edu/security"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <xdat:root_element_name>%s</xdat:root_element_name>
-  <xdat:search_field>
 %s
-  </xdat:search_field>
 %s
-</xdat:search>', root_type, paste(fields_xml, collapse = "\n"), criteria_xml)
+</xdat:search>', xml_escape(root_type), paste(fields_xml, collapse = "\n"), criteria_xml)
 
   xml
 }
@@ -238,6 +261,7 @@ search_criterion <- function(field, comparison, value) {
 #' with a fluent API.
 #'
 #' @param root_type The XSI type to search.
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #'
 #' @return A search builder object.
 #'
@@ -252,14 +276,15 @@ search_criterion <- function(field, comparison, value) {
 #' }
 #'
 #' @export
-xnat_search_builder <- function(root_type) {
+xnat_search_builder <- function(root_type, client = NULL) {
   check_string(root_type, "root_type")
 
   structure(
     list(
       root_type = root_type,
       fields = character(),
-      criteria = list()
+      criteria = list(),
+      client = client
     ),
     class = "xnat_search_builder"
   )
@@ -307,11 +332,12 @@ search_where <- function(builder, field, comparison, value) {
 #'
 #' @param builder A search builder object.
 #' @param format Output format: "json" (default) or "csv".
+#' @param client Optional `xnat_client`. If `NULL`, uses the builder client or global session.
 #'
 #' @return A tibble containing the search results.
 #'
 #' @export
-search_execute <- function(builder, format = "json") {
+search_execute <- function(builder, format = "json", client = NULL) {
   if (!inherits(builder, "xnat_search_builder")) {
     cli::cli_abort("{.arg builder} must be an xnat_search_builder object.")
   }
@@ -324,7 +350,8 @@ search_execute <- function(builder, format = "json") {
     root_type = builder$root_type,
     fields = builder$fields,
     criteria = if (length(builder$criteria) > 0) builder$criteria else NULL,
-    format = format
+    format = format,
+    client = client %||% builder$client
   )
 }
 

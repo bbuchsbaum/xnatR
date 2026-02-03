@@ -4,12 +4,14 @@
 \alias{xnat_token_invalidate}
 \title{Invalidate an Alias Token}
 \usage{
-xnat_token_invalidate(alias, secret)
+xnat_token_invalidate(alias, secret, client = NULL)
 }
 \arguments{
 \item{alias}{The alias portion of the token to invalidate.}
 
 \item{secret}{The secret portion of the token to invalidate.}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 Invisibly returns TRUE if successful.

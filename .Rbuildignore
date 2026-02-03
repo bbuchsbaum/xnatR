@@ -1,6 +1,9 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.planning$
+^\.git$
+^\.gitignore$
+^\.\.Rcheck$
 ^R/legacy$
 ^LICENSE\.md$
 ^README\.Rmd$

@@ -7,7 +7,10 @@
 #' @return A character string with the error message
 #' @noRd
 xnat_error_body <- function(resp) {
-  content_type <- httr2::resp_content_type(resp)
+  content_type <- tryCatch(httr2::resp_content_type(resp), error = function(e) NA_character_)
+  if (is.na(content_type) || !nzchar(content_type)) {
+    return(NULL)
+  }
 
   if (grepl("json", content_type, ignore.case = TRUE)) {
     tryCatch({
@@ -54,7 +57,7 @@ is_auth_error <- function(resp) {
 abort_auth_required <- function() {
   cli::cli_abort(
     c("Not authenticated.",
-      "i" = "Run {.code authenticate_xnat()} first."),
+      "i" = "Run {.code authenticate_xnat()} first, or pass an {.cls xnat_client} via the {.arg client} argument (see {.fn xnat_connect})."),
     class = "xnatR_auth_error"
   )
 }

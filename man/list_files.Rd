@@ -4,7 +4,14 @@
 \alias{list_files}
 \title{List Files in a Resource}
 \usage{
-list_files(project_id, subject_id, experiment_id, scan_id, resource)
+list_files(
+  project_id,
+  subject_id,
+  experiment_id,
+  scan_id,
+  resource,
+  client = NULL
+)
 }
 \arguments{
 \item{project_id}{The project identifier.}
@@ -16,6 +23,8 @@ list_files(project_id, subject_id, experiment_id, scan_id, resource)
 \item{scan_id}{The scan identifier.}
 
 \item{resource}{The resource label (e.g., "DICOM", "NIFTI").}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 A tibble of class \code{xnat_files} containing file details.

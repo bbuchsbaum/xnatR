@@ -4,7 +4,7 @@
 \alias{list_experiment_resources}
 \title{List Resources for an Experiment}
 \usage{
-list_experiment_resources(project_id, subject_id, experiment_id)
+list_experiment_resources(project_id, subject_id, experiment_id, client = NULL)
 }
 \arguments{
 \item{project_id}{The project identifier.}
@@ -12,6 +12,8 @@ list_experiment_resources(project_id, subject_id, experiment_id)
 \item{subject_id}{The subject identifier.}
 
 \item{experiment_id}{The experiment identifier.}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 A tibble of class \code{xnat_resources}.

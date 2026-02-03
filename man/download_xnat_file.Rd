@@ -4,7 +4,7 @@
 \alias{download_xnat_file}
 \title{Download a Single File from XNAT}
 \usage{
-download_xnat_file(url, dest_file, progress = TRUE)
+download_xnat_file(url, dest_file, progress = TRUE, client = NULL)
 }
 \arguments{
 \item{url}{Full URL to the file, or a path relative to the XNAT base URL.}
@@ -12,6 +12,8 @@ download_xnat_file(url, dest_file, progress = TRUE)
 \item{dest_file}{Destination file path.}
 
 \item{progress}{Show download progress bar. Default TRUE.}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 Invisibly returns the destination path.

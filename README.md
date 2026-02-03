@@ -15,7 +15,7 @@ remotes::install_github("bbuchsbaum/xnatR")
 ```r
 library(xnatR)
 
-# Authenticate with XNAT server
+# Option A: Global session (stored in the package environment)
 authenticate_xnat(
   base_url = "https://central.xnat.org",
   username = "guest",
@@ -40,6 +40,20 @@ scans <- list_scans(
   subject_id = "Subject001",
   experiment_id = "Experiment001"
 )
+```
+
+If you prefer not to use global session state, create an explicit client and pass
+it to functions:
+
+```r
+client <- xnat_connect(
+  base_url = "https://central.xnat.org",
+  username = "guest",
+  password = "guest",
+  use_jsession = TRUE
+)
+
+projects <- list_projects(client = client)
 ```
 
 ## Authentication

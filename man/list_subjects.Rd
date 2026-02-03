@@ -4,7 +4,13 @@
 \alias{list_subjects}
 \title{List Subjects in a Project}
 \usage{
-list_subjects(project_id, columns = NULL, limit = NULL, offset = NULL)
+list_subjects(
+  project_id,
+  columns = NULL,
+  limit = NULL,
+  offset = NULL,
+  client = NULL
+)
 }
 \arguments{
 \item{project_id}{The project identifier (required).}
@@ -15,6 +21,8 @@ Use NULL (default) to return all available columns.}
 \item{limit}{Maximum number of results to return.}
 
 \item{offset}{Number of results to skip for pagination.}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 A tibble of class \code{xnat_subjects} containing subject details.

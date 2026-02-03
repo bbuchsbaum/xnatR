@@ -4,7 +4,7 @@
 \alias{xnat_search}
 \title{Search XNAT Data}
 \usage{
-xnat_search(root_type, fields, criteria = NULL, format = "json")
+xnat_search(root_type, fields, criteria = NULL, format = "json", client = NULL)
 }
 \arguments{
 \item{root_type}{The XSI type to search (e.g., "xnat:mrSessionData",
@@ -21,6 +21,8 @@ xnat_search(root_type, fields, criteria = NULL, format = "json")
 }}
 
 \item{format}{Output format: "json" (default) or "csv".}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 A tibble containing the search results.

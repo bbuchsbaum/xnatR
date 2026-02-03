@@ -9,7 +9,8 @@ list_experiments(
   subject_id,
   columns = NULL,
   limit = NULL,
-  offset = NULL
+  offset = NULL,
+  client = NULL
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ list_experiments(
 \item{limit}{Maximum number of results to return.}
 
 \item{offset}{Number of results to skip for pagination.}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 A tibble of class \code{xnat_experiments} containing experiment details.

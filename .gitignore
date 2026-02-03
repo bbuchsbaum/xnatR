@@ -4,3 +4,7 @@
 .Ruserdata
 /doc/
 /Meta/
+*.Rcheck/
+..Rcheck/
+*.tar.gz
+vignettes/*.html

@@ -4,7 +4,13 @@
 \alias{list_experiment_files}
 \title{List Files in an Experiment Resource}
 \usage{
-list_experiment_files(project_id, subject_id, experiment_id, resource)
+list_experiment_files(
+  project_id,
+  subject_id,
+  experiment_id,
+  resource,
+  client = NULL
+)
 }
 \arguments{
 \item{project_id}{The project identifier.}
@@ -14,6 +20,8 @@ list_experiment_files(project_id, subject_id, experiment_id, resource)
 \item{experiment_id}{The experiment identifier.}
 
 \item{resource}{The resource label.}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 A tibble of class \code{xnat_files}.

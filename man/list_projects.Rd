@@ -4,7 +4,7 @@
 \alias{list_projects}
 \title{List XNAT Projects}
 \usage{
-list_projects(columns = NULL, limit = NULL, offset = NULL)
+list_projects(columns = NULL, limit = NULL, offset = NULL, client = NULL)
 }
 \arguments{
 \item{columns}{Character vector of column names to include in the result.
@@ -13,6 +13,8 @@ Use NULL (default) to return all available columns.}
 \item{limit}{Maximum number of results to return. NULL for no limit.}
 
 \item{offset}{Number of results to skip. Used for pagination.}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 A tibble of class \code{xnat_projects} containing project details.

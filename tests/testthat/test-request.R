@@ -18,6 +18,22 @@ test_that("xnat_request builds correct request structure", {
   expect_s3_class(req, "httr2_request")
   expect_match(req$url, "test.xnat.org")
   expect_match(req$url, "data/projects")
+  expect_true(!is.null(req$headers$Authorization))
+
+  clear_test_auth()
+})
+
+test_that("xnat_request prefers JSESSION cookie auth when configured", {
+  setup_test_auth("https://test.xnat.org")
+
+  env <- get_xnatR_env()
+  env$jsession <- "abc123"
+
+  req <- xnatR:::xnat_request("data/projects")
+
+  expect_true(!is.null(req$headers$Cookie))
+  expect_match(req$headers$Cookie, "JSESSIONID=abc123")
+  expect_true(is.null(req$headers$Authorization))
 
   clear_test_auth()
 })

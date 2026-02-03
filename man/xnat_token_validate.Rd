@@ -4,12 +4,14 @@
 \alias{xnat_token_validate}
 \title{Validate an Alias Token}
 \usage{
-xnat_token_validate(alias, secret)
+xnat_token_validate(alias, secret, client = NULL)
 }
 \arguments{
 \item{alias}{The alias portion of the token.}
 
 \item{secret}{The secret portion of the token.}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 A list with validation details:

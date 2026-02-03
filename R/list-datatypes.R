@@ -4,6 +4,8 @@
 #' These are the schema elements that define different types of data
 #' (e.g., xnat:mrSessionData, xnat:subjectData).
 #'
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
+#'
 #' @return A tibble of class `xnat_datatypes` containing data type information.
 #'   Columns include:
 #'   - `ELEMENT_NAME`: The XSI type name (e.g., "xnat:mrSessionData")
@@ -19,8 +21,8 @@
 #' }
 #'
 #' @export
-list_data_types <- function() {
-  result <- xnat_get_tibble("data/search/elements", class_name = "xnat_datatypes")
+list_data_types <- function(client = NULL) {
+  result <- xnat_get_tibble("data/search/elements", class_name = "xnat_datatypes", client = client)
   result
 }
 
@@ -30,6 +32,7 @@ list_data_types <- function() {
 #' Useful for building search queries.
 #'
 #' @param xsi_type The XSI type to query (e.g., "xnat:mrSessionData", "xnat:subjectData").
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #'
 #' @return A tibble of class `xnat_fields` containing field information.
 #'   Common columns include:
@@ -48,11 +51,11 @@ list_data_types <- function() {
 #' }
 #'
 #' @export
-list_queryable_fields <- function(xsi_type) {
+list_queryable_fields <- function(xsi_type, client = NULL) {
   check_string(xsi_type, "xsi_type")
 
   path <- xnat_path("data/search/elements", url_encode(xsi_type))
-  result <- xnat_get_tibble(path, class_name = "xnat_fields")
+  result <- xnat_get_tibble(path, class_name = "xnat_fields", client = client)
   attr(result, "xsi_type") <- xsi_type
   result
 }

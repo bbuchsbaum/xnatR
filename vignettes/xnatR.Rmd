@@ -43,6 +43,13 @@ library(xnatR)
 
 Before accessing any XNAT data, you must authenticate with an XNAT server. xnatR supports multiple authentication methods.
 
+### Two workflows
+
+Most functions in xnatR accept an optional `client` argument:
+
+- **Global session**: `authenticate_xnat()` stores credentials in the package environment.
+- **Explicit client**: `xnat_connect()` returns an `xnat_client` you pass explicitly.
+
 ### Direct Credentials
 
 The simplest approach is to provide credentials directly:
@@ -50,9 +57,22 @@ The simplest approach is to provide credentials directly:
 ```{r auth-direct}
 authenticate_xnat(
   base_url = "https://central.xnat.org",
-  username = "guest",
-  password = "guest"
+  username = "myuser",
+  password = "mypass"
 )
+```
+
+Or, create an explicit client:
+
+```{r auth-client}
+client <- xnat_connect(
+  base_url = "https://central.xnat.org",
+  username = "myuser",
+  password = "mypass",
+  use_jsession = TRUE
+)
+
+projects <- list_projects(client = client)
 ```
 
 ### Environment Variables
@@ -137,12 +157,15 @@ Check your authentication status:
 ```{r session}
 # Check if authenticated
 is_authenticated()
+is_authenticated(client = client)
 
 # Get current server URL
 xnat_server()
+xnat_server(client = client)
 
 # Get current username
 xnat_username()
+xnat_username(client = client)
 
 # Log out
 xnat_logout()
@@ -167,6 +190,10 @@ Project
 # List all projects you have access to
 projects <- list_projects()
 print(projects)
+
+# With an explicit client
+projects_client <- list_projects(client = client)
+print(projects_client)
 
 # Get specific columns only
 projects <- list_projects(columns = c("ID", "name", "description"))
@@ -351,7 +378,7 @@ results <- xnat_search(
 
 For complex searches, use the fluent search builder:
 ```{r search-builder}
-results <- xnat_search_builder("xnat:mrSessionData") |>
+results <- xnat_search_builder("xnat:mrSessionData", client = client) |>
   search_select(
     "xnat:mrSessionData/ID",
     "xnat:mrSessionData/label",
@@ -434,7 +461,6 @@ token <- xnat_token_issue()
 
 # Use it for authentication in another session
 authenticate_xnat(
-
   base_url = "https://central.xnat.org",
   username = token$alias,
   password = token$secret
@@ -478,9 +504,10 @@ xnatR uses cli for informative error messages:
 ```{r errors}
 # Not authenticated
 list_projects()
-#> Error:
-#> ! Not authenticated.
-#> ℹ Run `authenticate_xnat()` first.
+# Example output:
+# Error:
+# ! Not authenticated.
+# ℹ Run `authenticate_xnat()` first, or pass an `xnat_client` via the `client` argument (see `xnat_connect`).
 
 # Invalid credentials
 authenticate_xnat(
@@ -488,9 +515,10 @@ authenticate_xnat(
   username = "wrong",
   password = "wrong"
 )
-#> Error:
-#> ! Authentication failed.
-#> ✖ Invalid username or password.
+# Example output:
+# Error:
+# ! Authentication failed.
+# ✖ Invalid username or password.
 ```
 
 ## SSL Certificates
@@ -499,7 +527,7 @@ For servers with self-signed certificates:
 
 ```{r ssl}
 authenticate_xnat(
-base_url = "https://internal-xnat.myinstitution.org",
+  base_url = "https://internal-xnat.myinstitution.org",
   username = "myuser",
   password = "mypass",
   ssl_verify = FALSE

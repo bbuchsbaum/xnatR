@@ -7,6 +7,7 @@
 #' @param experiment_id The experiment identifier.
 #' @param scan_id The scan identifier.
 #' @param resource The resource label (e.g., "DICOM", "NIFTI").
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #'
 #' @return A tibble of class `xnat_files` containing file details.
 #'   Common columns include:
@@ -29,7 +30,7 @@
 #' }
 #'
 #' @export
-list_files <- function(project_id, subject_id, experiment_id, scan_id, resource) {
+list_files <- function(project_id, subject_id, experiment_id, scan_id, resource, client = NULL) {
   check_string(project_id, "project_id")
   check_string(subject_id, "subject_id")
   check_string(experiment_id, "experiment_id")
@@ -45,7 +46,7 @@ list_files <- function(project_id, subject_id, experiment_id, scan_id, resource)
     "files"
   )
 
-  result <- xnat_get_tibble(path, class_name = "xnat_files")
+  result <- xnat_get_tibble(path, class_name = "xnat_files", client = client)
   attr(result, "project_id") <- project_id
   attr(result, "subject_id") <- subject_id
   attr(result, "experiment_id") <- experiment_id
@@ -62,6 +63,7 @@ list_files <- function(project_id, subject_id, experiment_id, scan_id, resource)
 #' @param subject_id The subject identifier.
 #' @param experiment_id The experiment identifier.
 #' @param resource The resource label.
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #'
 #' @return A tibble of class `xnat_files`.
 #'
@@ -76,7 +78,7 @@ list_files <- function(project_id, subject_id, experiment_id, scan_id, resource)
 #' }
 #'
 #' @export
-list_experiment_files <- function(project_id, subject_id, experiment_id, resource) {
+list_experiment_files <- function(project_id, subject_id, experiment_id, resource, client = NULL) {
   check_string(project_id, "project_id")
   check_string(subject_id, "subject_id")
   check_string(experiment_id, "experiment_id")
@@ -90,7 +92,7 @@ list_experiment_files <- function(project_id, subject_id, experiment_id, resourc
     "files"
   )
 
-  result <- xnat_get_tibble(path, class_name = "xnat_files")
+  result <- xnat_get_tibble(path, class_name = "xnat_files", client = client)
   attr(result, "project_id") <- project_id
   attr(result, "subject_id") <- subject_id
   attr(result, "experiment_id") <- experiment_id

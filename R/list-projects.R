@@ -6,6 +6,7 @@
 #'   Use NULL (default) to return all available columns.
 #' @param limit Maximum number of results to return. NULL for no limit.
 #' @param offset Number of results to skip. Used for pagination.
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #'
 #' @return A tibble of class `xnat_projects` containing project details.
 #'   Common columns include:
@@ -32,14 +33,14 @@
 #' }
 #'
 #' @export
-list_projects <- function(columns = NULL, limit = NULL, offset = NULL) {
+list_projects <- function(columns = NULL, limit = NULL, offset = NULL, client = NULL) {
   query <- list(
     columns = if (!is.null(columns)) paste(columns, collapse = ",") else NULL,
     limit = limit,
     offset = offset
   )
 
-  xnat_get_tibble("data/projects", query = query, class_name = "xnat_projects")
+  xnat_get_tibble("data/projects", query = query, class_name = "xnat_projects", client = client)
 }
 
 #' @export

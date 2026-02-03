@@ -7,6 +7,7 @@
 #' @param columns Character vector of column names to include.
 #' @param limit Maximum number of results to return.
 #' @param offset Number of results to skip for pagination.
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #'
 #' @return A tibble of class `xnat_experiments` containing experiment details.
 #'   Common columns include:
@@ -29,7 +30,7 @@
 #' }
 #'
 #' @export
-list_experiments <- function(project_id, subject_id, columns = NULL, limit = NULL, offset = NULL) {
+list_experiments <- function(project_id, subject_id, columns = NULL, limit = NULL, offset = NULL, client = NULL) {
   check_string(project_id, "project_id")
   check_string(subject_id, "subject_id")
 
@@ -45,7 +46,7 @@ list_experiments <- function(project_id, subject_id, columns = NULL, limit = NUL
     offset = offset
   )
 
-  result <- xnat_get_tibble(path, query = query, class_name = "xnat_experiments")
+  result <- xnat_get_tibble(path, query = query, class_name = "xnat_experiments", client = client)
   attr(result, "project_id") <- project_id
   attr(result, "subject_id") <- subject_id
   result

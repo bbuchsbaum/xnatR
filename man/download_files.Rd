@@ -13,7 +13,8 @@ download_files(
   format = "zip",
   dest_dir = getwd(),
   dest_file = NULL,
-  progress = TRUE
+  progress = TRUE,
+  client = NULL
 )
 }
 \arguments{
@@ -39,6 +40,8 @@ download_files(
 \item{dest_file}{Custom destination filename. If NULL, auto-generated.}
 
 \item{progress}{Show download progress bar. Default TRUE.}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 Invisibly returns the path to the downloaded file.

@@ -7,6 +7,7 @@
 #'   Use NULL (default) to return all available columns.
 #' @param limit Maximum number of results to return.
 #' @param offset Number of results to skip for pagination.
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #'
 #' @return A tibble of class `xnat_subjects` containing subject details.
 #'   Common columns include:
@@ -29,7 +30,7 @@
 #' }
 #'
 #' @export
-list_subjects <- function(project_id, columns = NULL, limit = NULL, offset = NULL) {
+list_subjects <- function(project_id, columns = NULL, limit = NULL, offset = NULL, client = NULL) {
   check_string(project_id, "project_id")
 
   path <- xnat_path("data/projects", url_encode(project_id), "subjects")
@@ -40,7 +41,7 @@ list_subjects <- function(project_id, columns = NULL, limit = NULL, offset = NUL
     offset = offset
   )
 
-  result <- xnat_get_tibble(path, query = query, class_name = "xnat_subjects")
+  result <- xnat_get_tibble(path, query = query, class_name = "xnat_subjects", client = client)
   attr(result, "project_id") <- project_id
   result
 }

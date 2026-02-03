@@ -4,7 +4,10 @@
 \alias{xnat_token_list}
 \title{List User's Alias Tokens}
 \usage{
-xnat_token_list()
+xnat_token_list(client = NULL)
+}
+\arguments{
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 A tibble of active tokens with columns:

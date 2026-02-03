@@ -4,7 +4,10 @@
 \alias{xnat_token_issue}
 \title{Issue an Alias Token}
 \usage{
-xnat_token_issue()
+xnat_token_issue(client = NULL)
+}
+\arguments{
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 A list containing the token details:

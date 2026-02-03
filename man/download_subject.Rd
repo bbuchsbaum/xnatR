@@ -9,7 +9,8 @@ download_subject(
   subject_id,
   format = "zip",
   dest_dir = getwd(),
-  progress = TRUE
+  progress = TRUE,
+  client = NULL
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ download_subject(
 \item{dest_dir}{Destination directory.}
 
 \item{progress}{Show download progress bar.}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 Invisibly returns a character vector of downloaded file paths.

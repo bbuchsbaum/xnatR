@@ -4,7 +4,7 @@
 \alias{list_resources}
 \title{List Resources for a Scan}
 \usage{
-list_resources(project_id, subject_id, experiment_id, scan_id)
+list_resources(project_id, subject_id, experiment_id, scan_id, client = NULL)
 }
 \arguments{
 \item{project_id}{The project identifier.}
@@ -14,6 +14,8 @@ list_resources(project_id, subject_id, experiment_id, scan_id)
 \item{experiment_id}{The experiment identifier.}
 
 \item{scan_id}{The scan identifier.}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 A tibble of class \code{xnat_resources} containing resource details.

@@ -89,9 +89,14 @@ authenticate_xnat <- function(base_url = NULL,
   xnatR_env$jsession <- NULL
 
   # Establish JSESSION if requested
- if (use_jsession) {
+  if (use_jsession) {
     tryCatch({
-      jsession <- establish_jsession()
+      jsession <- establish_jsession(
+        base_url = xnatR_env$base_url,
+        username = xnatR_env$username,
+        password = xnatR_env$password,
+        ssl_verify = xnatR_env$ssl_verify
+      )
       xnatR_env$jsession <- jsession
       cli::cli_alert_info("Using JSESSION-based authentication")
     }, error = function(e) {
@@ -133,15 +138,19 @@ authenticate_xnat <- function(base_url = NULL,
 #'
 #' Creates a server-side session and returns the JSESSION ID.
 #'
+#' @param base_url XNAT base URL
+#' @param username XNAT username
+#' @param password XNAT password
+#' @param ssl_verify Whether to verify SSL certificates
 #' @return JSESSION ID string
 #' @noRd
-establish_jsession <- function() {
-  req <- httr2::request(xnatR_env$base_url) |>
+establish_jsession <- function(base_url, username, password, ssl_verify = TRUE) {
+  req <- httr2::request(sub("/+$", "", base_url)) |>
     httr2::req_url_path_append("data/JSESSION") |>
-    httr2::req_auth_basic(xnatR_env$username, xnatR_env$password) |>
+    httr2::req_auth_basic(username, password) |>
     httr2::req_method("POST")
 
-  if (!isTRUE(xnatR_env$ssl_verify)) {
+  if (!isTRUE(ssl_verify)) {
     req <- httr2::req_options(req, ssl_verifypeer = FALSE)
   }
 
@@ -331,6 +340,7 @@ xnat_logout <- function(invalidate_session = FALSE) {
 
 #' Check if authenticated
 #'
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #' @return TRUE if credentials are stored, FALSE otherwise.
 #'
 #' @examples
@@ -341,14 +351,23 @@ xnat_logout <- function(invalidate_session = FALSE) {
 #' }
 #'
 #' @export
-is_authenticated <- function() {
+is_authenticated <- function(client = NULL) {
+  if (!is.null(client)) {
+    if (!inherits(client, "xnat_client")) {
+      cli::cli_abort("{.arg client} must be an xnat_client.")
+    }
+    return(!is.null(client$base_url) &&
+      (!is.null(client$jsession) || (!is.null(client$username) && !is.null(client$password))))
+  }
+
   !is.null(xnatR_env$base_url) &&
-    !is.null(xnatR_env$username) &&
-    !is.null(xnatR_env$password)
+    (!is.null(xnatR_env$jsession) ||
+      (!is.null(xnatR_env$username) && !is.null(xnatR_env$password)))
 }
 
 #' Get current XNAT server URL
 #'
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #' @return The current server URL or NULL if not authenticated.
 #'
 #' @examples
@@ -357,12 +376,19 @@ is_authenticated <- function() {
 #' }
 #'
 #' @export
-xnat_server <- function() {
+xnat_server <- function(client = NULL) {
+  if (!is.null(client)) {
+    if (!inherits(client, "xnat_client")) {
+      cli::cli_abort("{.arg client} must be an xnat_client.")
+    }
+    return(client$base_url)
+  }
   xnatR_env$base_url
 }
 
 #' Get current username
 #'
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #' @return The current username or NULL if not authenticated.
 #'
 #' @examples
@@ -371,7 +397,13 @@ xnat_server <- function() {
 #' }
 #'
 #' @export
-xnat_username <- function() {
+xnat_username <- function(client = NULL) {
+  if (!is.null(client)) {
+    if (!inherits(client, "xnat_client")) {
+      cli::cli_abort("{.arg client} must be an xnat_client.")
+    }
+    return(client$username)
+  }
   xnatR_env$username
 }
 
@@ -399,9 +431,10 @@ xnat_username <- function() {
 #' # Use token$alias and token$secret for subsequent authentication
 #' }
 #'
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #' @export
-xnat_token_issue <- function() {
-  result <- xnat_get("data/services/tokens/issue")
+xnat_token_issue <- function(client = NULL) {
+  result <- xnat_get("data/services/tokens/issue", client = client)
 
   # Flatten the result if nested
   if (!is.null(result$alias)) {
@@ -424,6 +457,7 @@ xnat_token_issue <- function() {
 #'
 #' @param alias The alias portion of the token.
 #' @param secret The secret portion of the token.
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #'
 #' @return A list with validation details:
 #'   - `valid`: Logical, whether the token is valid
@@ -440,14 +474,14 @@ xnat_token_issue <- function() {
 #' }
 #'
 #' @export
-xnat_token_validate <- function(alias, secret) {
+xnat_token_validate <- function(alias, secret, client = NULL) {
   check_string(alias, "alias")
   check_string(secret, "secret")
 
   path <- xnat_path("data/services/tokens/validate", alias, secret)
 
   tryCatch({
-    result <- xnat_get(path)
+    result <- xnat_get(path, client = client)
     result$valid <- TRUE
     result
   }, error = function(e) {
@@ -461,6 +495,7 @@ xnat_token_validate <- function(alias, secret) {
 #'
 #' @param alias The alias portion of the token to invalidate.
 #' @param secret The secret portion of the token to invalidate.
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #'
 #' @return Invisibly returns TRUE if successful.
 #'
@@ -471,14 +506,14 @@ xnat_token_validate <- function(alias, secret) {
 #' }
 #'
 #' @export
-xnat_token_invalidate <- function(alias, secret) {
+xnat_token_invalidate <- function(alias, secret, client = NULL) {
   check_string(alias, "alias")
   check_string(secret, "secret")
 
   path <- xnat_path("data/services/tokens/invalidate", alias, secret)
 
   tryCatch({
-    xnat_post(path)
+    xnat_post(path, client = client)
     cli::cli_alert_success("Invalidated alias token: {.val {alias}}")
     invisible(TRUE)
   }, error = function(e) {
@@ -504,9 +539,10 @@ xnat_token_invalidate <- function(alias, secret) {
 #' print(tokens)
 #' }
 #'
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #' @export
-xnat_token_list <- function() {
-  result <- xnat_get("data/services/tokens/list")
+xnat_token_list <- function(client = NULL) {
+  result <- xnat_get("data/services/tokens/list", client = client)
 
   if (length(result) == 0) {
     return(tibble::tibble(

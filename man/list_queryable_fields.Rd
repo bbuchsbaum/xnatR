@@ -4,10 +4,12 @@
 \alias{list_queryable_fields}
 \title{List Queryable Fields for a Data Type}
 \usage{
-list_queryable_fields(xsi_type)
+list_queryable_fields(xsi_type, client = NULL)
 }
 \arguments{
 \item{xsi_type}{The XSI type to query (e.g., "xnat:mrSessionData", "xnat:subjectData").}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 A tibble of class \code{xnat_fields} containing field information.

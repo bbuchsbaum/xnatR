@@ -4,7 +4,10 @@
 \alias{list_data_types}
 \title{List Available Data Types}
 \usage{
-list_data_types()
+list_data_types(client = NULL)
+}
+\arguments{
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 A tibble of class \code{xnat_datatypes} containing data type information.

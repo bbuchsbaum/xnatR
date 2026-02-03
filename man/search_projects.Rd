@@ -4,12 +4,14 @@
 \alias{search_projects}
 \title{Search XNAT Projects}
 \usage{
-search_projects(pattern, columns = NULL)
+search_projects(pattern, columns = NULL, client = NULL)
 }
 \arguments{
 \item{pattern}{A character string to search for (case-insensitive).}
 
 \item{columns}{Character vector of column names to include.}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 A tibble of class \code{xnat_projects} containing matching projects.

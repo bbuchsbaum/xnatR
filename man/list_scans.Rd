@@ -10,7 +10,8 @@ list_scans(
   experiment_id,
   columns = NULL,
   limit = NULL,
-  offset = NULL
+  offset = NULL,
+  client = NULL
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ list_scans(
 \item{limit}{Maximum number of results to return.}
 
 \item{offset}{Number of results to skip for pagination.}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 A tibble of class \code{xnat_scans} containing scan details.

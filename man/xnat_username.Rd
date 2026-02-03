@@ -4,7 +4,10 @@
 \alias{xnat_username}
 \title{Get current username}
 \usage{
-xnat_username()
+xnat_username(client = NULL)
+}
+\arguments{
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the global session.}
 }
 \value{
 The current username or NULL if not authenticated.

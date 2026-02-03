@@ -15,6 +15,7 @@
 #' @param dest_dir Destination directory. Defaults to current working directory.
 #' @param dest_file Custom destination filename. If NULL, auto-generated.
 #' @param progress Show download progress bar. Default TRUE.
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #'
 #' @return Invisibly returns the path to the downloaded file.
 #'
@@ -56,7 +57,8 @@ download_files <- function(project_id,
                            format = "zip",
                            dest_dir = getwd(),
                            dest_file = NULL,
-                           progress = TRUE) {
+                           progress = TRUE,
+                           client = NULL) {
   check_string(project_id, "project_id")
   check_string(subject_id, "subject_id")
   check_string(experiment_id, "experiment_id")
@@ -99,7 +101,7 @@ download_files <- function(project_id,
 
   # Download
   cli::cli_progress_step("Downloading to {.file {dest_file}}")
-  xnat_download(path, dest_path, query = list(format = format), progress = progress)
+  xnat_download(path, dest_path, query = list(format = format), progress = progress, client = client)
   cli::cli_alert_success("Downloaded to {.file {dest_path}}")
 
   invisible(dest_path)
@@ -112,6 +114,7 @@ download_files <- function(project_id,
 #' @param url Full URL to the file, or a path relative to the XNAT base URL.
 #' @param dest_file Destination file path.
 #' @param progress Show download progress bar. Default TRUE.
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #'
 #' @return Invisibly returns the destination path.
 #'
@@ -124,7 +127,7 @@ download_files <- function(project_id,
 #' }
 #'
 #' @export
-download_xnat_file <- function(url, dest_file, progress = TRUE) {
+download_xnat_file <- function(url, dest_file, progress = TRUE, client = NULL) {
   check_string(url, "url")
   check_string(dest_file, "dest_file")
 
@@ -139,7 +142,7 @@ download_xnat_file <- function(url, dest_file, progress = TRUE) {
   # Remove leading slash if present
   path <- sub("^/+", "", path)
 
-  xnat_download(path, dest_file, progress = progress)
+  xnat_download(path, dest_file, progress = progress, client = client)
   cli::cli_alert_success("Downloaded to {.file {dest_file}}")
 
   invisible(dest_file)
@@ -154,6 +157,7 @@ download_xnat_file <- function(url, dest_file, progress = TRUE) {
 #' @param format Download format: "zip" (default) or "tar.gz".
 #' @param dest_dir Destination directory.
 #' @param progress Show download progress bar.
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
 #'
 #' @return Invisibly returns a character vector of downloaded file paths.
 #'
@@ -171,7 +175,8 @@ download_subject <- function(project_id,
                               subject_id,
                               format = "zip",
                               dest_dir = getwd(),
-                              progress = TRUE) {
+                              progress = TRUE,
+                              client = NULL) {
   check_string(project_id, "project_id")
   check_string(subject_id, "subject_id")
 
@@ -182,7 +187,7 @@ download_subject <- function(project_id,
   }
 
   # Get experiments
-  experiments <- list_experiments(project_id, subject_id)
+  experiments <- list_experiments(project_id, subject_id, client = client)
 
   if (nrow(experiments) == 0) {
     cli::cli_alert_warning("No experiments found for subject {.val {subject_id}}")
@@ -201,7 +206,8 @@ download_subject <- function(project_id,
       experiment_id = exp_id,
       format = format,
       dest_dir = subject_dir,
-      progress = progress
+      progress = progress,
+      client = client
     )
   }
 

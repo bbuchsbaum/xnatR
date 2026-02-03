@@ -4,12 +4,14 @@
 \alias{search_execute}
 \title{Execute Search Builder Query}
 \usage{
-search_execute(builder, format = "json")
+search_execute(builder, format = "json", client = NULL)
 }
 \arguments{
 \item{builder}{A search builder object.}
 
 \item{format}{Output format: "json" (default) or "csv".}
+
+\item{client}{Optional \code{xnat_client}. If \code{NULL}, uses the builder client or global session.}
 }
 \value{
 A tibble containing the search results.
