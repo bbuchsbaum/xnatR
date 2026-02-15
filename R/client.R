@@ -15,6 +15,8 @@
 #'   of using Basic Auth for each request. Default `FALSE`.
 #' @param jsession Optional existing JSESSIONID value. When provided, requests use
 #'   cookie auth and do not send Basic Auth.
+#' @param xnat_name Optional server nickname used for compatibility with Rxnat-style
+#'   environment variables (`<XNAT_NAME>_RXNAT_USER`, `<XNAT_NAME>_RXNAT_PASS`).
 #'
 #' @return `xnat_connect()` returns an `xnat_client`.
 #' @export
@@ -36,7 +38,33 @@ xnat_connect <- function(base_url = NULL,
                          ssl_verify = TRUE,
                          verify = TRUE,
                          use_jsession = FALSE,
-                         jsession = NULL) {
+                         jsession = NULL,
+                         xnat_name = NULL) {
+  if (!is.null(xnat_name)) {
+    check_string(xnat_name, "xnat_name")
+    prefix <- toupper(xnat_name)
+    user_var <- paste0(prefix, "_RXNAT_USER")
+    pass_var <- paste0(prefix, "_RXNAT_PASS")
+
+    if (is.null(username)) {
+      env_user <- Sys.getenv(user_var, unset = "")
+      if (nzchar(env_user)) {
+        username <- env_user
+      }
+    } else {
+      do.call(Sys.setenv, stats::setNames(list(username), user_var))
+    }
+
+    if (is.null(password)) {
+      env_pass <- Sys.getenv(pass_var, unset = "")
+      if (nzchar(env_pass)) {
+        password <- env_pass
+      }
+    } else {
+      do.call(Sys.setenv, stats::setNames(list(password), pass_var))
+    }
+  }
+
   creds <- resolve_credentials(base_url, username, password)
 
   if (is.null(creds$base_url) || !nzchar(creds$base_url)) {
@@ -56,17 +84,18 @@ xnat_connect <- function(base_url = NULL,
 
   if (use_jsession && is.null(client$jsession)) {
     if (is.null(client$username) || is.null(client$password)) {
-      cli::cli_abort(c(
-        "Cannot establish JSESSION without username/password.",
-        "i" = "Provide {.arg username} and {.arg password}."
-      ))
+      client$jsession <- establish_anonymous_jsession(
+        base_url = client$base_url,
+        ssl_verify = client$ssl_verify
+      )
+    } else {
+      client$jsession <- establish_jsession(
+        base_url = client$base_url,
+        username = client$username,
+        password = client$password,
+        ssl_verify = client$ssl_verify
+      )
     }
-    client$jsession <- establish_jsession(
-      base_url = client$base_url,
-      username = client$username,
-      password = client$password,
-      ssl_verify = client$ssl_verify
-    )
   }
 
   if (verify) {
@@ -185,4 +214,3 @@ with_xnat_client <- function(client, expr) {
 
   force(expr)
 }
-

@@ -158,6 +158,44 @@ establish_jsession <- function(base_url, username, password, ssl_verify = TRUE) 
   httr2::resp_body_string(resp)
 }
 
+#' Establish an anonymous JSESSION cookie session
+#'
+#' Requests the XNAT root endpoint and extracts the JSESSIONID cookie from the
+#' response headers. Useful for public-project browsing without credentials.
+#'
+#' @param base_url XNAT base URL.
+#' @param ssl_verify Whether to verify SSL certificates.
+#' @return JSESSION ID string.
+#' @noRd
+establish_anonymous_jsession <- function(base_url, ssl_verify = TRUE) {
+  req <- httr2::request(sub("/+$", "", base_url))
+
+  if (!isTRUE(ssl_verify)) {
+    req <- httr2::req_options(req, ssl_verifypeer = FALSE)
+  }
+
+  resp <- httr2::req_perform(req)
+  cookies <- httr2::resp_headers(resp)[["set-cookie"]]
+
+  if (is.null(cookies) || !nzchar(cookies)) {
+    cli::cli_abort(c(
+      "Failed to establish anonymous JSESSION.",
+      "i" = "Server did not return a {.field Set-Cookie} header."
+    ))
+  }
+
+  match <- regexpr("JSESSIONID=([^;]+)", cookies, perl = TRUE)
+  if (match < 0) {
+    cli::cli_abort(c(
+      "Failed to establish anonymous JSESSION.",
+      "i" = "Server response did not include a JSESSIONID cookie."
+    ))
+  }
+
+  value <- regmatches(cookies, match)
+  sub("^JSESSIONID=", "", value)
+}
+
 #' Resolve credentials from multiple sources
 #'
 #' Priority: explicit args > environment variables > config file > .netrc

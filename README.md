@@ -115,6 +115,9 @@ list_queryable_fields("xnat:mrSessionData")
 ### Downloading
 
 ```r
+# Download by experiment ID only (uniform high-level API)
+download_experiment(experiment_id = "Exp001")
+
 # Download all scans from an experiment
 download_files(
   project_id = "MyProject",
@@ -145,6 +148,9 @@ download_subject(project_id = "MyProject", subject_id = "Subject001")
 ### Advanced Search
 
 ```r
+# High-level scan search with named filters
+search_scans(project_id = "MyProject", scan_type = "T1", tr = 2000)
+
 # Search using the XML search API
 results <- xnat_search(
   root_type = "xnat:mrSessionData",
@@ -163,6 +169,9 @@ results <- xnat_search_builder("xnat:mrSessionData") |>
 
 # Simple project search
 search_projects("MRI")
+
+# List all files attached to an experiment (with scan-level fallback)
+list_experiment_files_all("Exp001")
 ```
 
 ### Alias Tokens

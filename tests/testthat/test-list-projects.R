@@ -75,6 +75,66 @@ test_that("list_projects returns empty tibble when no projects", {
   clear_test_auth()
 })
 
+test_that("list_projects repairs empty column names in ResultSet", {
+  setup_test_auth()
+
+  local_mocked_bindings(
+    xnat_get = function(path, query = NULL, client = NULL) {
+      df <- data.frame(
+        matrix(
+          c("PROJECT_1", "Test Project 1", "PROJECT_2", "Test Project 2"),
+          ncol = 2,
+          byrow = TRUE
+        ),
+        stringsAsFactors = FALSE
+      )
+      names(df) <- c("", "")
+      mock_resultset(df)
+    },
+    .package = "xnatR"
+  )
+
+  result <- list_projects()
+  expect_s3_class(result, "xnat_projects")
+  expect_equal(nrow(result), 2)
+  expect_false(any(names(result) == ""))
+  expect_true(all(nzchar(names(result))))
+
+  clear_test_auth()
+})
+
+test_that("list_projects retries with fallback columns on placeholder names", {
+  setup_test_auth()
+  calls <- list()
+
+  local_mocked_bindings(
+    xnat_get = function(path, query = NULL, client = NULL) {
+      calls[[length(calls) + 1]] <<- query
+
+      if (is.null(query$columns)) {
+        df <- data.frame(
+          matrix(c("a", "b", "c", "d"), ncol = 2, byrow = TRUE),
+          stringsAsFactors = FALSE
+        )
+        names(df) <- c("", "")
+        return(mock_resultset(df))
+      }
+
+      expect_equal(query$columns, "ID,name,secondary_ID,description,pi_firstname,pi_lastname")
+      mock_resultset(mock_projects(2))
+    },
+    .package = "xnatR"
+  )
+
+  result <- list_projects()
+  expect_equal(length(calls), 2)
+  expect_equal(nrow(result), 2)
+  expect_true(all(c("ID", "name") %in% names(result)))
+  expect_false(all(grepl("^\\.\\.\\.[0-9]+$", names(result))))
+
+  clear_test_auth()
+})
+
 test_that("print.xnat_projects works correctly", {
   setup_test_auth()
 

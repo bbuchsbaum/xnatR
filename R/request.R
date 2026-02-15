@@ -81,11 +81,15 @@ xnat_request <- function(path, client = NULL) {
 xnat_get <- function(path, query = NULL, client = NULL) {
   req <- xnat_request(path, client = client)
 
-  if (!is.null(query)) {
-    query <- compact(query)
-    if (length(query) > 0) {
-      req <- httr2::req_url_query(req, !!!query)
-    }
+  query <- compact(query %||% list())
+
+  # Ensure XNAT returns JSON payloads on servers that do not honor Accept.
+  if (is.null(query$format)) {
+    query$format <- "json"
+  }
+
+  if (length(query) > 0) {
+    req <- httr2::req_url_query(req, !!!query)
   }
 
   resp <- httr2::req_perform(req)

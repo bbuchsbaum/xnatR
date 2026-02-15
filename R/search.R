@@ -376,3 +376,218 @@ print.xnat_search_builder <- function(x, ...) {
 
   invisible(x)
 }
+
+# -----------------------------------------------------------------------------
+# Scan-Parameter Search
+# -----------------------------------------------------------------------------
+
+#' Search Scans Across XNAT
+#'
+#' Performs a scan-parameter search across sessions/scans using XNAT's XML search
+#' endpoint with a tidy, xnatR-style interface.
+#'
+#' @param subject_id Optional subject ID filter.
+#' @param project_id Optional project ID filter.
+#' @param age Optional age filter.
+#' @param experiment_id Optional experiment ID filter.
+#' @param scan_type Optional scan type filter.
+#' @param tr Optional repetition time filter.
+#' @param te Optional echo time filter.
+#' @param ti Optional inversion time filter.
+#' @param flip Optional flip angle filter.
+#' @param voxel_res_units Optional voxel-resolution units filter.
+#' @param voxel_res_x Optional X voxel-resolution filter.
+#' @param voxel_res_y Optional Y voxel-resolution filter.
+#' @param voxel_res_z Optional Z voxel-resolution filter.
+#' @param orientation Optional orientation filter.
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
+#'
+#' @return A tibble containing matching scan rows.
+#' @export
+search_scans <- function(subject_id = NULL,
+                         project_id = NULL,
+                         age = NULL,
+                         experiment_id = NULL,
+                         scan_type = NULL,
+                         tr = NULL,
+                         te = NULL,
+                         ti = NULL,
+                         flip = NULL,
+                         voxel_res_units = NULL,
+                         voxel_res_x = NULL,
+                         voxel_res_y = NULL,
+                         voxel_res_z = NULL,
+                         orientation = NULL,
+                         client = NULL) {
+  filters <- list(
+    subject_ID = subject_id,
+    project = project_id,
+    age = age,
+    experiment_ID = experiment_id,
+    type = scan_type,
+    TR = tr,
+    TE = te,
+    TI = ti,
+    flip = flip,
+    voxel_res = voxel_res_units,
+    voxel_res_X = voxel_res_x,
+    voxel_res_Y = voxel_res_y,
+    voxel_res_Z = voxel_res_z,
+    orientation = orientation
+  )
+
+  xml <- build_scan_parameters_search_xml(filters)
+  result <- execute_search_xml(xml, format = "json", conn = client)
+  result <- normalize_scan_query_columns(result)
+
+  as_xnat_tibble(result, "xnat_scan_query")
+}
+
+#' @noRd
+execute_search_xml <- function(xml, format = "json", conn = NULL) {
+  req <- xnat_request("data/search", client = conn) |>
+    httr2::req_method("POST") |>
+    httr2::req_headers(`Content-Type` = "text/xml") |>
+    httr2::req_url_query(format = format) |>
+    httr2::req_body_raw(xml, type = "text/xml")
+
+  resp <- httr2::req_perform(req)
+
+  if (identical(format, "json")) {
+    parse_xnat_result(httr2::resp_body_json(resp))
+  } else {
+    httr2::resp_body_string(resp)
+  }
+}
+
+#' @noRd
+normalize_scan_query_columns <- function(x) {
+  if (!is.data.frame(x) || ncol(x) == 0) {
+    return(x)
+  }
+
+  rename_map <- c(
+    SUBJECT_ID = "subject_ID",
+    PROJECT = "Project",
+    AGE = "Age",
+    "Session ID" = "experiment_ID",
+    TYPE = "Type",
+    TR = "TR",
+    TE = "TE",
+    TI = "TI",
+    FLIP = "Flip",
+    VOXELRES_UNITS = "Voxel_res",
+    VOXELRES_X = "Voxel_res_X",
+    VOXELRES_Y = "Voxel_res_Y",
+    VOXELRES_Z = "Voxel_res_Z",
+    Orientation = "Orientation"
+  )
+
+  matches <- intersect(names(rename_map), names(x))
+  if (length(matches) > 0) {
+    idx <- match(matches, names(x))
+    names(x)[idx] <- unname(rename_map[matches])
+  }
+
+  x
+}
+
+#' @noRd
+build_scan_parameters_search_xml <- function(filters) {
+  xml_escape <- function(x) {
+    x <- as.character(x)
+    x <- gsub("&", "&amp;", x, fixed = TRUE)
+    x <- gsub("<", "&lt;", x, fixed = TRUE)
+    x <- gsub(">", "&gt;", x, fixed = TRUE)
+    x <- gsub("\"", "&quot;", x, fixed = TRUE)
+    x <- gsub("'", "&apos;", x, fixed = TRUE)
+    x
+  }
+
+  select_fields <- list(
+    list(element = "xnat:mrSessionData", field_id = "SUBJECT_ID", type = "string", header = "SUBJECT_ID"),
+    list(element = "xnat:mrSessionData", field_id = "PROJECT", type = "string", header = "PROJECT"),
+    list(element = "xnat:mrSessionData", field_id = "AGE", type = "float", header = "AGE"),
+    list(element = "xnat:mrScanData", field_id = "IMAGE_SESSION_ID", type = "string", header = "Session ID"),
+    list(element = "xnat:mrScanData", field_id = "TYPE", type = "string", header = "TYPE"),
+    list(element = "xnat:mrScanData", field_id = "PARAMETERS_TR", type = "float", header = "TR"),
+    list(element = "xnat:mrScanData", field_id = "PARAMETERS_TE", type = "float", header = "TE"),
+    list(element = "xnat:mrScanData", field_id = "PARAMETERS_TI", type = "float", header = "TI"),
+    list(element = "xnat:mrScanData", field_id = "PARAMETERS_FLIP", type = "float", header = "FLIP"),
+    list(element = "xnat:mrScanData", field_id = "PARAMETERS_VOXELRES_UNITS", type = "string", header = "VOXELRES_UNITS"),
+    list(element = "xnat:mrScanData", field_id = "PARAMETERS_VOXELRES_X", type = "float", header = "VOXELRES_X"),
+    list(element = "xnat:mrScanData", field_id = "PARAMETERS_VOXELRES_Y", type = "float", header = "VOXELRES_Y"),
+    list(element = "xnat:mrScanData", field_id = "PARAMETERS_VOXELRES_Z", type = "float", header = "VOXELRES_Z"),
+    list(element = "xnat:mrScanData", field_id = "PARAMETERS_ORIENTATION", type = "string", header = "Orientation")
+  )
+
+  select_xml <- vapply(seq_along(select_fields), function(i) {
+    field <- select_fields[[i]]
+    sprintf('  <xdat:search_field>
+    <xdat:element_name>%s</xdat:element_name>
+    <xdat:field_ID>%s</xdat:field_ID>
+    <xdat:sequence>%d</xdat:sequence>
+    <xdat:type>%s</xdat:type>
+    <xdat:header>%s</xdat:header>
+  </xdat:search_field>',
+      xml_escape(field$element),
+      xml_escape(field$field_id),
+      i - 1L,
+      xml_escape(field$type),
+      xml_escape(field$header)
+    )
+  }, character(1))
+
+  schema_fields <- c(
+    subject_ID = "xnat:mrSessionData.SUBJECT_ID",
+    project = "xnat:mrSessionData.PROJECT",
+    age = "xnat:mrSessionData.AGE",
+    experiment_ID = "xnat:mrScanData.IMAGE_SESSION_ID",
+    type = "xnat:mrScanData.TYPE",
+    TR = "xnat:mrScanData.PARAMETERS_TR",
+    TE = "xnat:mrScanData.PARAMETERS_TE",
+    TI = "xnat:mrScanData.PARAMETERS_TI",
+    flip = "xnat:mrScanData.PARAMETERS_FLIP",
+    voxel_res = "xnat:mrScanData.PARAMETERS_VOXELRES_UNITS",
+    voxel_res_X = "xnat:mrScanData.PARAMETERS_VOXELRES_X",
+    voxel_res_Y = "xnat:mrScanData.PARAMETERS_VOXELRES_Y",
+    voxel_res_Z = "xnat:mrScanData.PARAMETERS_VOXELRES_Z",
+    orientation = "xnat:mrScanData.PARAMETERS_ORIENTATION"
+  )
+
+  filters <- compact(filters)
+  criteria_xml <- character()
+  if (length(filters) > 0) {
+    for (name in names(filters)) {
+      schema <- schema_fields[[name]]
+      if (is.null(schema)) {
+        next
+      }
+      value <- filters[[name]]
+      criteria_xml <- c(criteria_xml, sprintf('    <xdat:criteria override_value_formatting="0">
+      <xdat:schema_field>%s</xdat:schema_field>
+      <xdat:comparison_type>=</xdat:comparison_type>
+      <xdat:value>%s</xdat:value>
+    </xdat:criteria>',
+        xml_escape(schema),
+        xml_escape(value)
+      ))
+    }
+  }
+
+  where_xml <- ""
+  if (length(criteria_xml) > 0) {
+    where_xml <- sprintf('  <xdat:search_where method="AND">
+%s
+  </xdat:search_where>', paste(criteria_xml, collapse = "\n"))
+  }
+
+  sprintf('<?xml version="1.0" encoding="UTF-8"?>
+<xdat:search ID="" allow-diff-columns="0" secure="false" brief-description="MR Sessions"
+  xmlns:xdat="http://nrg.wustl.edu/security"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <xdat:root_element_name>xnat:mrSessionData</xdat:root_element_name>
+%s
+%s
+</xdat:search>', paste(select_xml, collapse = "\n"), where_xml)
+}

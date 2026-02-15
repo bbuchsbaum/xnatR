@@ -40,7 +40,33 @@ list_projects <- function(columns = NULL, limit = NULL, offset = NULL, client = 
     offset = offset
   )
 
-  xnat_get_tibble("data/projects", query = query, class_name = "xnat_projects", client = client)
+  result <- xnat_get_tibble("data/projects", query = query, class_name = "xnat_projects", client = client)
+
+  # Some XNAT instances can return malformed "all columns" output with no
+  # meaningful column names. Retry with a stable default project column set.
+  if (is.null(columns) &&
+      ncol(result) > 0 &&
+      all(grepl("^\\.\\.\\.[0-9]+$", names(result)))) {
+    fallback_cols <- c("ID", "name", "secondary_ID", "description", "pi_firstname", "pi_lastname")
+    fallback_query <- list(
+      columns = paste(fallback_cols, collapse = ","),
+      limit = limit,
+      offset = offset
+    )
+
+    fallback_result <- tryCatch(
+      xnat_get_tibble("data/projects", query = fallback_query, class_name = "xnat_projects", client = client),
+      error = function(e) NULL
+    )
+
+    if (!is.null(fallback_result) &&
+        ncol(fallback_result) > 0 &&
+        !all(grepl("^\\.\\.\\.[0-9]+$", names(fallback_result)))) {
+      result <- fallback_result
+    }
+  }
+
+  result
 }
 
 #' @export

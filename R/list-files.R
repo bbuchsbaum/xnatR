@@ -100,6 +100,33 @@ list_experiment_files <- function(project_id, subject_id, experiment_id, resourc
   result
 }
 
+#' List All Files for an Experiment
+#'
+#' Returns experiment-level files and, optionally, falls back to scan-level files
+#' (`scans/ALL/files`) if none are present at the experiment level.
+#'
+#' @param experiment_id Experiment identifier.
+#' @param include_scan_level If `TRUE` (default), fall back to `scans/ALL/files`
+#'   when experiment-level files are empty.
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
+#'
+#' @return A tibble of class `xnat_files`.
+#' @export
+list_experiment_files_all <- function(experiment_id, include_scan_level = TRUE, client = NULL) {
+  check_string(experiment_id, "experiment_id")
+
+  path <- xnat_path("data/experiments", url_encode(experiment_id), "files")
+  result <- xnat_get_tibble(path, class_name = "xnat_files", client = client)
+
+  if (isTRUE(include_scan_level) && nrow(result) == 0) {
+    fallback_path <- xnat_path("data/experiments", url_encode(experiment_id), "scans", "ALL", "files")
+    result <- xnat_get_tibble(fallback_path, class_name = "xnat_files", client = client)
+  }
+
+  attr(result, "experiment_id") <- experiment_id
+  result
+}
+
 #' @export
 print.xnat_files <- function(x, ...) {
   n <- nrow(x)

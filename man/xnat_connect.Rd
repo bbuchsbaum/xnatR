@@ -11,7 +11,8 @@ xnat_connect(
   ssl_verify = TRUE,
   verify = TRUE,
   use_jsession = FALSE,
-  jsession = NULL
+  jsession = NULL,
+  xnat_name = NULL
 )
 }
 \arguments{
@@ -30,6 +31,9 @@ of using Basic Auth for each request. Default \code{FALSE}.}
 
 \item{jsession}{Optional existing JSESSIONID value. When provided, requests use
 cookie auth and do not send Basic Auth.}
+
+\item{xnat_name}{Optional server nickname used for compatibility with Rxnat-style
+environment variables (\verb{<XNAT_NAME>_RXNAT_USER}, \verb{<XNAT_NAME>_RXNAT_PASS}).}
 }
 \value{
 \code{xnat_connect()} returns an \code{xnat_client}.

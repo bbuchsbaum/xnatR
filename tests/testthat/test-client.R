@@ -133,6 +133,47 @@ test_that("xnat_connect with verify=FALSE skips HTTP request", {
   expect_s3_class(client, "xnat_client")
 })
 
+test_that("xnat_connect reads Rxnat-style credentials from xnat_name env vars", {
+  withr::with_envvar(
+    c(TESTSITE_RXNAT_USER = "rx_user", TESTSITE_RXNAT_PASS = "rx_pass"),
+    {
+      client <- xnat_connect(
+        base_url = "https://test.xnat.org",
+        xnat_name = "testsite",
+        verify = FALSE
+      )
+
+      expect_equal(client$username, "rx_user")
+      expect_equal(client$password, "rx_pass")
+    }
+  )
+})
+
+test_that("xnat_connect can establish anonymous jsession", {
+  withr::with_envvar(c(XNATR_USER = NA, XNATR_PASS = NA), {
+    local_mocked_bindings(
+      resolve_credentials = function(base_url = NULL, username = NULL, password = NULL) {
+        list(base_url = base_url, username = username, password = password)
+      },
+      establish_anonymous_jsession = function(base_url, ssl_verify = TRUE) {
+        expect_equal(base_url, "https://test.xnat.org")
+        "anon_jsession"
+      },
+      .package = "xnatR"
+    )
+
+    client <- xnat_connect(
+      base_url = "https://test.xnat.org",
+      use_jsession = TRUE,
+      verify = FALSE
+    )
+
+    expect_equal(client$jsession, "anon_jsession")
+    expect_null(client$username)
+    expect_null(client$password)
+  })
+})
+
 test_that("xnat_current_client returns NULL when not authenticated", {
   clear_test_auth()
   expect_null(xnat_current_client())

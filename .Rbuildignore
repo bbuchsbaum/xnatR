@@ -11,3 +11,6 @@
 ^doc$
 ^docs$
 ^Meta$
+^\.omc$
+^\.rcmdcheck_result\.rds$
+^\.covr_result\.rds$

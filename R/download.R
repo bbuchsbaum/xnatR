@@ -214,3 +214,104 @@ download_subject <- function(project_id,
   cli::cli_alert_success("Downloaded all data for subject {.val {subject_id}}")
   invisible(paths)
 }
+
+#' Download an Experiment Archive
+#'
+#' Downloads an experiment scan selection (`ALL` by default) as an archive.
+#'
+#' @param experiment_id Experiment identifier.
+#' @param scan_id Scan ID/type to download; defaults to `"ALL"`.
+#' @param format Archive format: `"zip"` (default) or `"tar.gz"`.
+#' @param dest_dir Destination directory. Defaults to [tempdir()].
+#' @param dest_file Optional destination filename. If `NULL`, auto-generated.
+#' @param extract If `TRUE`, extract archive contents and return extracted paths.
+#' @param progress Show download progress bar. Default `TRUE`.
+#' @param strict If `TRUE` (default), raise errors on failed download. If `FALSE`,
+#'   return `NULL` on failure.
+#' @param client Optional `xnat_client`. If `NULL`, uses the global session.
+#'
+#' @return Archive path, extracted file paths (when `extract = TRUE`), or `NULL`
+#'   on failure when `strict = FALSE`.
+#' @export
+download_experiment <- function(experiment_id,
+                                scan_id = "ALL",
+                                format = "zip",
+                                dest_dir = tempdir(),
+                                dest_file = NULL,
+                                extract = FALSE,
+                                progress = TRUE,
+                                strict = TRUE,
+                                client = NULL) {
+  check_string(experiment_id, "experiment_id")
+  check_string(scan_id, "scan_id")
+  check_string(format, "format")
+
+  if (!format %in% c("zip", "tar.gz")) {
+    cli::cli_abort("{.arg format} must be one of {.val zip} or {.val tar.gz}.")
+  }
+
+  if (!dir.exists(dest_dir)) {
+    dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
+  }
+
+  if (is.null(dest_file)) {
+    ext <- if (identical(format, "zip")) ".zip" else ".tar.gz"
+    dest_file <- paste0(experiment_id, ext)
+  }
+  dest_path <- file.path(dest_dir, dest_file)
+
+  path <- xnat_path(
+    "data/experiments", url_encode(experiment_id),
+    "scans", url_encode(scan_id),
+    "files"
+  )
+
+  download_impl <- function() {
+    xnat_download(
+      path = path,
+      dest_file = dest_path,
+      query = list(format = format),
+      progress = isTRUE(progress),
+      client = client
+    )
+  }
+
+  if (isTRUE(strict)) {
+    download_impl()
+  } else {
+    ok <- tryCatch({
+      download_impl()
+      TRUE
+    }, error = function(e) {
+      cli::cli_alert_warning("Download failed for {.val {experiment_id}}: {conditionMessage(e)}")
+      FALSE
+    })
+    if (!ok) {
+      return(NULL)
+    }
+  }
+
+  if (!isTRUE(extract)) {
+    return(dest_path)
+  }
+
+  if (identical(format, "zip")) {
+    extracted <- utils::unzip(dest_path, exdir = dest_dir)
+    return(as_absolute_paths(extracted, base_dir = dest_dir))
+  }
+
+  extracted <- utils::untar(dest_path, exdir = dest_dir, list = TRUE)
+  utils::untar(dest_path, exdir = dest_dir)
+  as_absolute_paths(extracted, base_dir = dest_dir)
+}
+
+#' @noRd
+as_absolute_paths <- function(paths, base_dir) {
+  if (length(paths) == 0) {
+    return(paths)
+  }
+
+  absolute <- grepl("^(/|[A-Za-z]:[/\\\\])", paths)
+  paths[!absolute] <- file.path(base_dir, paths[!absolute])
+  paths
+}
