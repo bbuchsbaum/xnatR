@@ -8,10 +8,9 @@ test_that("list_subjects requires project_id", {
   clear_test_auth()
 })
 
-test_that("list_experiments requires project_id and subject_id", {
+test_that("list_experiments requires project_id", {
   setup_test_auth()
   expect_error(list_experiments(), "project_id")
-  expect_error(list_experiments(project_id = "P"), "subject_id")
   clear_test_auth()
 })
 

@@ -2,11 +2,11 @@
 % Please edit documentation in R/list-experiments.R
 \name{list_experiments}
 \alias{list_experiments}
-\title{List Experiments for a Subject}
+\title{List Experiments (Sessions) for a Project or Subject}
 \usage{
 list_experiments(
   project_id,
-  subject_id,
+  subject_id = NULL,
   columns = NULL,
   limit = NULL,
   offset = NULL,
@@ -16,7 +16,8 @@ list_experiments(
 \arguments{
 \item{project_id}{The project identifier (required).}
 
-\item{subject_id}{The subject identifier (required).}
+\item{subject_id}{Optional subject identifier. When \code{NULL}, all
+experiments in the project are returned.}
 
 \item{columns}{Character vector of column names to include.}
 
@@ -39,14 +40,21 @@ Common columns include:
 }
 }
 \description{
-Retrieves a list of experiments (imaging sessions) for a specific subject.
+Retrieves a list of experiments (imaging sessions). When only
+\code{project_id} is given, returns all experiments across every subject in
+that project. When \code{subject_id} is also supplied, results are scoped to
+that single subject.
 }
 \examples{
 \dontrun{
 authenticate_xnat(base_url = "https://central.xnat.org",
                   username = "guest", password = "guest")
 
-experiments <- list_experiments(
+# All experiments in a project
+all_exps <- list_experiments(project_id = "MyProject")
+
+# Experiments for one subject
+subj_exps <- list_experiments(
   project_id = "MyProject",
   subject_id = "Subject001"
 )
