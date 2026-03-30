@@ -7,64 +7,27 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  eval = FALSE
+  eval = FALSE,
+  message = FALSE,
+
+  warning = FALSE
 )
 ```
 
-## Introduction
+You have neuroimaging data sitting in an XNAT archive and you need to get it
+into R — browse what's available, find specific sessions, and download scans
+to disk. xnatR gives you a tidy, pipe-friendly interface to the XNAT REST API
+so you can do all of that without leaving your R session.
 
-xnatR is an R package for interacting with [XNAT](https://www.xnat.org/) neuroimaging data archives. XNAT is an open-source imaging informatics platform used by research institutions worldwide to manage and share neuroimaging data.
+## Connect and explore in 30 seconds
 
-This vignette covers:
-
-- Authentication and credential management
-- Navigating the XNAT data hierarchy
-- Downloading data
-- Advanced searching
-- Working with alias tokens
-
-## Installation
-
-```{r installation}
-# Install from GitHub
-# install.packages("remotes")
-remotes::install_github("bbuchsbaum/xnatR")
-```
-
-```{r setup}
+```{r quickstart}
 library(xnatR)
-```
 
-## Authentication
-
-Before accessing any XNAT data, you must authenticate with an XNAT server. xnatR supports multiple authentication methods.
-
-### Two workflows
-
-Most functions in xnatR accept an optional `client` argument:
-
-- **Global session**: `authenticate_xnat()` stores credentials in the package environment.
-- **Explicit client**: `xnat_connect()` returns an `xnat_client` you pass explicitly.
-
-### Direct Credentials
-
-The simplest approach is to provide credentials directly:
-
-```{r auth-direct}
-authenticate_xnat(
-  base_url = "https://central.xnat.org",
-  username = "myuser",
-  password = "mypass"
-)
-```
-
-Or, create an explicit client:
-
-```{r auth-client}
 client <- xnat_connect(
   base_url = "https://central.xnat.org",
   username = "myuser",
@@ -72,490 +35,250 @@ client <- xnat_connect(
   use_jsession = TRUE
 )
 
-projects <- list_projects(client = client)
+list_projects(client = client)
+#> ── XNAT Projects ──────────────────────────────
+#> 42 projects
+#> # A tibble: 42 × 3
+#>    ID              name                    description
+#>    <chr>           <chr>                   <chr>
+#>  1 CENTRAL_OASIS   Central OASIS Project   Cross-sectional MRI…
+#>  2 ABIDE           ABIDE                   Autism Brain Imaging…
+#>    …
 ```
 
-### Environment Variables
+That's the pattern: **connect once, then use `list_*` functions to navigate
+the data hierarchy.** Every function accepts an optional `client` argument; if
+you omit it, xnatR falls back to a global session set up with
+`authenticate_xnat()`.
 
-For scripts and automated workflows, use environment variables:
-- `XNATR_HOST` - The XNAT server URL
-- `XNATR_USER` - Your username
-- `XNATR_PASS` - Your password
+## The XNAT data hierarchy
 
-```{r auth-env}
-# Set environment variables (typically done in .Renviron)
-Sys.setenv(XNATR_HOST = "https://central.xnat.org")
-Sys.setenv(XNATR_USER = "myuser")
-Sys.setenv(XNATR_PASS = "mypass")
-
-# Authenticate using environment variables
-authenticate_xnat()
-```
-### Configuration File
-
-For persistent local configuration, create a YAML config file:
-
-```{r auth-config}
-# Create template config file
-initialize_config()
-# This creates ~/.xnatR_config.yml
-# Edit the file with your credentials, then:
-authenticate_xnat()
-```
-
-The config file format:
-```yaml
-base_url: 'https://your-xnat-server.org'
-username: 'your-username'
-password: 'your-password'
-ssl_verify: true
-```
-
-### .netrc File
-
-xnatR also supports the standard `.netrc` file format used by many tools:
-
-```
-# ~/.netrc
-machine central.xnat.org login myuser password mypass
-```
-
-```{r auth-netrc}
-# Just provide the URL, credentials come from .netrc
-authenticate_xnat(base_url = "https://central.xnat.org")
-```
-
-### JSESSION Authentication
-
-For better performance with many requests, use JSESSION-based authentication:
-
-```{r auth-jsession}
-authenticate_xnat(
-  base_url = "https://central.xnat.org",
-  username = "myuser",
-  password = "mypass",
-  use_jsession = TRUE
-)
-```
-
-### XNAT 1.8+ Auth Providers
-
-XNAT 1.8+ supports multiple authentication providers (LDAP, OAuth, etc.). Use the `provider/username` format:
-
-```{r auth-provider}
-authenticate_xnat(
-  base_url = "https://myxnat.org",
-  username = "ldap/myuser",
-  password = "mypass"
-)
-```
-
-### Session Management
-
-Check your authentication status:
-
-```{r session}
-# Check if authenticated
-is_authenticated()
-is_authenticated(client = client)
-
-# Get current server URL
-xnat_server()
-xnat_server(client = client)
-
-# Get current username
-xnat_username()
-xnat_username(client = client)
-
-# Log out
-xnat_logout()
-```
-
-## Navigating XNAT Data
-
-XNAT organizes data in a hierarchy:
+XNAT organises imaging data in a tree:
 
 ```
 Project
 └── Subject
     └── Experiment (imaging session)
-        └── Scan
-            └── Resource (DICOM, NIFTI, etc.)
+        └── Scan (e.g., T1, BOLD, DWI)
+            └── Resource (DICOM, NIFTI, …)
                 └── Files
 ```
 
-### Listing Projects
+Each level has a corresponding `list_*()` function that returns a tibble.
+You drill down by passing IDs from the level above.
 
-```{r list-projects}
-# List all projects you have access to
-projects <- list_projects()
-print(projects)
+## How do I find my project?
 
-# With an explicit client
-projects_client <- list_projects(client = client)
-print(projects_client)
+If you know the project ID, skip ahead. Otherwise, search by keyword:
 
-# Get specific columns only
-projects <- list_projects(columns = c("ID", "name", "description"))
-
-# Search for projects by name
-mri_projects <- search_projects("MRI")
+```{r find-project}
+search_projects("OASIS", client = client)
+#> ── XNAT Projects ──────────────────────────────
+#> 2 projects
+#> # A tibble: 2 × 3
+#>   ID              name                  description
+#>   <chr>           <chr>                 <chr>
+#> 1 CENTRAL_OASIS   Central OASIS Project Cross-sectional MRI…
+#> 2 OASIS3          OASIS-3               Longitudinal MRI…
 ```
 
-### Listing Subjects
+## Who is in the project?
 
 ```{r list-subjects}
-# List subjects in a project
-subjects <- list_subjects(project_id = "MyProject")
-print(subjects)
-
-# With pagination for large projects
-first_100 <- list_subjects(project_id = "MyProject", limit = 100)
-next_100 <- list_subjects(project_id = "MyProject", limit = 100, offset = 100)
+subjects <- list_subjects("CENTRAL_OASIS", client = client)
+subjects
+#> ── XNAT Subjects ──────────────────────────────
+#> Project: "CENTRAL_OASIS"
+#> 416 subjects
+#> # A tibble: 416 × 4
+#>   ID         label    project         gender
+#>   <chr>      <chr>    <chr>           <chr>
+#> 1 OAS1_0001  OAS1_0001 CENTRAL_OASIS  F
+#> 2 OAS1_0002  OAS1_0002 CENTRAL_OASIS  M
+#>   …
 ```
 
-### Listing Experiments
+For large projects, use `limit` and `offset` for pagination:
 
-Experiments represent imaging sessions (MR, PET, CT, etc.):
+```{r paginate-subjects}
+first_50 <- list_subjects("CENTRAL_OASIS", limit = 50, client = client)
+next_50  <- list_subjects("CENTRAL_OASIS", limit = 50, offset = 50, client = client)
+```
 
-```{r list-experiments}
-experiments <- list_experiments(
-  project_id = "MyProject",
-  subject_id = "Subject001"
+## What sessions exist?
+
+`list_experiments()` returns sessions for a project. Pass `subject_id` to
+scope to a single subject, or omit it to get everything:
+
+```{r list-sessions}
+# All sessions in the project
+all_sessions <- list_experiments("CENTRAL_OASIS", client = client)
+
+# Sessions for one subject
+subj_sessions <- list_experiments(
+  "CENTRAL_OASIS",
+  subject_id = "OAS1_0001",
+  client = client
 )
-print(experiments)
+subj_sessions
+#> ── XNAT Experiments ───────────────────────────
+#> Project: "CENTRAL_OASIS"
+#> Subject: "OAS1_0001"
+#> 2 experiments
+#> # A tibble: 2 × 4
+#>   ID          label        xsiType              date
+#>   <chr>       <chr>        <chr>                 <chr>
+#> 1 E00001      MR1          xnat:mrSessionData    2005-09-02
+#> 2 E00002      MR2          xnat:mrSessionData    2006-11-18
 ```
 
-### Listing Scans
+Want the most recent sessions? `list_recent_sessions()` sorts by date and
+lets you cap the count:
 
-Scans are individual acquisitions within an experiment:
+```{r recent-sessions}
+recent <- list_recent_sessions("CENTRAL_OASIS", n = 5, client = client)
+recent
+```
+
+## What scans are in a session?
 
 ```{r list-scans}
 scans <- list_scans(
-  project_id = "MyProject",
-  subject_id = "Subject001",
-  experiment_id = "Exp001"
+  project_id    = "CENTRAL_OASIS",
+  subject_id    = "OAS1_0001",
+  experiment_id = "E00001",
+  client        = client
 )
-print(scans)
+scans
+#> ── XNAT Scans ─────────────────────────────────
+#> 4 scans
+#> # A tibble: 4 × 4
+#>   ID    type        quality   frames
+#>   <chr> <chr>       <chr>     <chr>
+#> 1 1     T1          usable    176
+#> 2 2     T2          usable    176
+#> 3 3     BOLD        usable    132
+#> 4 4     DWI         usable    72
 ```
 
-### Listing Resources and Files
+## How do I download data?
 
-Resources are containers for files (e.g., DICOM, NIFTI):
+### Download all scans from a session
 
-```{r list-resources}
-# List resources for a scan
-resources <- list_resources(
-  project_id = "MyProject",
-  subject_id = "Subject001",
-  experiment_id = "Exp001",
-  scan_id = "1"
-)
-
-# List files within a resource
-files <- list_files(
-  project_id = "MyProject",
-  subject_id = "Subject001",
-  experiment_id = "Exp001",
-  scan_id = "1",
-  resource = "DICOM"
-)
-```
-
-### Derived Data
-
-XNAT stores processed data as assessors and reconstructions:
-
-```{r derived-data}
-# List assessors (e.g., FreeSurfer outputs, QC results)
-assessors <- list_assessors(
-  project_id = "MyProject",
-  subject_id = "Subject001",
-  experiment_id = "Exp001"
-)
-
-# List reconstructions
-recons <- list_reconstructions(
-  project_id = "MyProject",
-  subject_id = "Subject001",
-  experiment_id = "Exp001"
-)
-```
-
-## Downloading Data
-
-### Download Scans
-
-```{r download-scans}
-# Download all scans from an experiment
+```{r download-all}
 download_files(
-  project_id = "MyProject",
-  subject_id = "Subject001",
-  experiment_id = "Exp001",
-  dest_dir = "~/Downloads"
+  project_id    = "CENTRAL_OASIS",
+  subject_id    = "OAS1_0001",
+  experiment_id = "E00001",
+  dest_dir      = "~/Downloads",
+  client        = client
+)
+#> ℹ Downloading to CENTRAL_OASIS_OAS1_0001_E00001_ALL_ALL.zip
+#> ✔ Downloaded to ~/Downloads/CENTRAL_OASIS_OAS1_0001_E00001_ALL_ALL.zip
+```
+
+### Download specific scans or resource types
+
+```{r download-specific}
+# Just the T1 and BOLD scans
+download_files(
+  project_id    = "CENTRAL_OASIS",
+  subject_id    = "OAS1_0001",
+  experiment_id = "E00001",
+  scan_id       = c("1", "3"),
+  dest_dir      = "~/Downloads",
+  client        = client
 )
 
-# Download specific scans
+# Only NIFTI resources
 download_files(
-  project_id = "MyProject",
-  subject_id = "Subject001",
-  experiment_id = "Exp001",
-  scan_id = c("1", "2", "3"),
-  dest_dir = "~/Downloads"
-)
-
-# Download only DICOM files
-download_files(
-  project_id = "MyProject",
-  subject_id = "Subject001",
-  experiment_id = "Exp001",
-  resource = "DICOM",
-  dest_dir = "~/Downloads"
+  project_id    = "CENTRAL_OASIS",
+  subject_id    = "OAS1_0001",
+  experiment_id = "E00001",
+  resource      = "NIFTI",
+  dest_dir      = "~/Downloads",
+  client        = client
 )
 ```
 
-### Download Subject Data
+### Download an entire subject
 
-Download all data for a subject:
+`download_subject()` grabs every session for a subject:
 
 ```{r download-subject}
 download_subject(
-  project_id = "MyProject",
-  subject_id = "Subject001",
-  dest_dir = "~/Downloads"
+  project_id = "CENTRAL_OASIS",
+  subject_id = "OAS1_0001",
+  dest_dir   = "~/Downloads",
+  client     = client
+)
+#> ℹ Downloading 2 experiments for subject "OAS1_0001"
+#> ✔ Downloaded all data for subject "OAS1_0001"
+```
+
+### Download a session by experiment ID alone
+
+If you already have the experiment ID (e.g., from a search), you don't need
+the full project/subject/experiment triple:
+
+```{r download-experiment}
+download_experiment(
+  experiment_id = "E00001",
+  format        = "zip",
+  dest_dir      = "~/Downloads",
+  extract       = TRUE,
+  client        = client
 )
 ```
 
-### Download Individual Files
+## Credential management
 
-```{r download-file}
-download_xnat_file(
-  url = "/data/projects/MyProject/subjects/S001/experiments/E001/scans/1/resources/DICOM/files/file.dcm",
-  dest_file = "file.dcm"
-)
+The examples above used `xnat_connect()` with explicit credentials. For
+real work, you'll want to keep passwords out of your scripts.
+
+**Environment variables** (best for CI and shared scripts):
+
+```{r auth-envvar}
+# In your .Renviron file:
+# XNATR_HOST=https://central.xnat.org
+# XNATR_USER=myuser
+# XNATR_PASS=mypass
+
+# Then just:
+client <- xnat_connect()
 ```
 
-## Advanced Search
+**Config file** (best for interactive use on your own machine):
 
-For complex queries across your XNAT data, use the search API.
-
-### Discover Searchable Fields
-
-First, find what data types and fields are available:
-
-```{r search-discovery}
-# List all data types
-datatypes <- list_data_types()
-print(datatypes)
-
-# List queryable fields for MR sessions
-fields <- list_queryable_fields("xnat:mrSessionData")
-print(fields)
+```{r auth-config}
+initialize_config()
+# Creates ~/.xnatR_config.yml — edit it with your credentials, then:
+client <- xnat_connect()
 ```
 
-### Basic Search
+**`.netrc` file** (if you already use one for curl/wget):
 
-```{r search-basic}
-# Search for MR sessions in a project
-results <- xnat_search(
-  root_type = "xnat:mrSessionData",
-  fields = c(
-    "xnat:mrSessionData/ID",
-    "xnat:mrSessionData/label",
-    "xnat:mrSessionData/date"
-  ),
-  criteria = list(
-    list(
-      field = "xnat:mrSessionData/project",
-      comparison = "EQUALS",
-      value = "MyProject"
-    )
-  )
-)
+```
+machine central.xnat.org login myuser password mypass
 ```
 
-### Search Builder (Fluent API)
-
-For complex searches, use the fluent search builder:
-```{r search-builder}
-results <- xnat_search_builder("xnat:mrSessionData", client = client) |>
-  search_select(
-    "xnat:mrSessionData/ID",
-    "xnat:mrSessionData/label",
-    "xnat:mrSessionData/date",
-    "xnat:mrSessionData/subject_ID"
-  ) |>
-  search_where("xnat:mrSessionData/project", "EQUALS", "MyProject") |>
-  search_where("xnat:mrSessionData/date", "GREATER_THAN", "2023-01-01") |>
-  search_execute()
-
-print(results)
+```{r auth-netrc}
+client <- xnat_connect(base_url = "https://central.xnat.org")
 ```
 
-### Search Criteria
+For servers with self-signed SSL certificates, pass `ssl_verify = FALSE`.
 
-Available comparison operators:
+## Clean up
 
-- `EQUALS` - Exact match
-- `LIKE` - Pattern match (use % as wildcard)
-- `GREATER_THAN` - Greater than
-- `LESS_THAN` - Less than
-- `GREATER_THAN_EQUAL` - Greater than or equal
-- `LESS_THAN_EQUAL` - Less than or equal
+Always log out when you're done, especially with JSESSION connections:
 
-```{r search-criteria}
-# Create reusable criteria
-project_crit <- search_criterion(
-  field = "xnat:subjectData/project",
-  comparison = "EQUALS",
-  value = "MyProject"
-)
-
-gender_crit <- search_criterion(
-  field = "xnat:subjectData/gender",
-  comparison = "EQUALS",
-  value = "M"
-)
-
-# Use in search
-results <- xnat_search(
-  root_type = "xnat:subjectData",
-  fields = c("xnat:subjectData/ID", "xnat:subjectData/label"),
-  criteria = list(project_crit, gender_crit)
-)
+```{r logout}
+xnat_logout(invalidate_session = TRUE, client = client)
 ```
 
-## Alias Tokens
+## Next steps
 
-Alias tokens provide temporary credentials that can be revoked without changing your password.
-
-```{r tokens}
-# Issue a new token
-token <- xnat_token_issue()
-print(token$alias)
-print(token$estimatedExpirationTime)
-
-# List all your active tokens
-tokens <- xnat_token_list()
-print(tokens)
-
-# Validate a token
-validation <- xnat_token_validate(
-  alias = token$alias,
-  secret = token$secret
-)
-print(validation$valid)
-
-# Invalidate a token when done
-xnat_token_invalidate(
-  alias = token$alias,
-  secret = token$secret
-)
-```
-
-You can use alias tokens for authentication:
-
-```{r token-auth}
-# Get a token
-token <- xnat_token_issue()
-
-# Use it for authentication in another session
-authenticate_xnat(
-  base_url = "https://central.xnat.org",
-  username = token$alias,
-  password = token$secret
-)
-```
-
-## Working with S3 Classes
-
-All list functions return tibbles with custom S3 classes. These provide nice printing:
-
-```{r s3-classes}
-projects <- list_projects()
-class(projects)
-#> [1] "xnat_projects" "tbl_df" "tbl" "data.frame"
-
-# Custom print shows summary
-print(projects)
-#> ── XNAT Projects ──────────────────────────────
-#> 42 projects
-#> # A tibble: 42 × 3
-#>    ID          name                    description
-#>    <chr>       <chr>                   <chr>
-#>  1 CENTRAL_...  Central OASIS ...       ...
-#>  ...
-```
-
-The objects work like regular tibbles with dplyr and other tidyverse packages:
-
-```{r tidyverse}
-library(dplyr)
-
-projects |>
-  filter(grepl("MRI", name, ignore.case = TRUE)) |>
-  select(ID, name)
-```
-
-## Error Handling
-
-xnatR uses cli for informative error messages:
-
-```{r errors}
-# Not authenticated
-list_projects()
-# Example output:
-# Error:
-# ! Not authenticated.
-# ℹ Run `authenticate_xnat()` first, or pass an `xnat_client` via the `client` argument (see `xnat_connect`).
-
-# Invalid credentials
-authenticate_xnat(
-  base_url = "https://central.xnat.org",
-  username = "wrong",
-  password = "wrong"
-)
-# Example output:
-# Error:
-# ! Authentication failed.
-# ✖ Invalid username or password.
-```
-
-## SSL Certificates
-
-For servers with self-signed certificates:
-
-```{r ssl}
-authenticate_xnat(
-  base_url = "https://internal-xnat.myinstitution.org",
-  username = "myuser",
-  password = "mypass",
-  ssl_verify = FALSE
-)
-```
-
-## Best Practices
-
-1. **Use environment variables** for credentials in scripts
-2. **Use alias tokens** for temporary access or sharing
-3. **Enable JSESSION** for scripts making many requests
-4. **Use pagination** (`limit`, `offset`) for large result sets
-5. **Log out** when done, especially with JSESSION
-
-```{r best-practices}
-# Example workflow
-authenticate_xnat(use_jsession = TRUE)
-
-tryCatch({
-  projects <- list_projects()
-  # ... do work ...
-}, finally = {
-  xnat_logout(invalidate_session = TRUE)
-})
-```
-
-## Session Info
-
-```{r session-info, eval=TRUE}
-sessionInfo()
-```
+- `vignette("workflows")` — common task recipes: batch downloads,
+  finding recent sessions, searching by scan parameters
+- `?xnat_search_builder` — the fluent search API for complex queries
+- `?xnat_token_issue` — alias tokens for temporary or shared access

@@ -1,0 +1,267 @@
+---
+title: "Common Workflows"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Common Workflows}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+This vignette walks through task recipes that combine several xnatR functions.
+Each section is self-contained — jump to the one that matches your problem.
+
+```{r load}
+library(xnatR)
+
+client <- xnat_connect(
+  base_url = "https://central.xnat.org",
+  username = "myuser",
+  password = "mypass",
+  use_jsession = TRUE
+)
+```
+
+## Find recent sessions and download three subjects
+
+You have a project ID and want to grab the newest data.
+
+```{r recent-download}
+# Get the 20 most recent sessions, newest first
+recent <- list_recent_sessions("MY_PROJECT", n = 20, client = client)
+recent
+```
+
+Pick the first three unique subjects and download each one:
+
+```{r download-three-subjects}
+subjects <- unique(recent$subject_ID)[1:3]
+subjects
+#> [1] "SUBJ_042" "SUBJ_017" "SUBJ_099"
+
+for (subj in subjects) {
+  download_subject(
+    project_id = "MY_PROJECT",
+    subject_id = subj,
+    dest_dir   = "~/Downloads",
+    format     = "zip",
+    client     = client
+  )
+}
+#> ℹ Downloading 2 experiments for subject "SUBJ_042"
+#> ✔ Downloaded all data for subject "SUBJ_042"
+#> ℹ Downloading 1 experiment for subject "SUBJ_017"
+#> ✔ Downloaded all data for subject "SUBJ_017"
+#> ℹ Downloading 3 experiments for subject "SUBJ_099"
+#> ✔ Downloaded all data for subject "SUBJ_099"
+```
+
+If you want one zip per session instead of per subject, use
+`download_experiment()`:
+
+```{r download-per-session}
+for (i in seq_len(min(5, nrow(recent)))) {
+  download_experiment(
+    experiment_id = recent$ID[i],
+    scan_id       = "ALL",
+    format        = "zip",
+    dest_dir      = "~/Downloads",
+    client        = client
+  )
+}
+```
+
+## Search for sessions by date range
+
+The search builder lets you query across the entire XNAT instance. Here we
+find all MR sessions in a project acquired after a cutoff date:
+
+```{r search-date-range}
+sessions_2024 <- xnat_search_builder("xnat:mrSessionData") |>
+  search_select(
+    "xnat:mrSessionData/ID",
+    "xnat:mrSessionData/label",
+    "xnat:mrSessionData/subject_ID",
+    "xnat:mrSessionData/date"
+  ) |>
+  search_where("xnat:mrSessionData/project", "EQUALS", "MY_PROJECT") |>
+  search_where("xnat:mrSessionData/date", "GREATER_THAN", "2024-01-01") |>
+  search_execute(client = client)
+
+sessions_2024
+```
+
+You can add more `search_where()` clauses — they combine with AND logic.
+Use `list_queryable_fields("xnat:mrSessionData")` to discover what fields
+are available.
+
+## Find scans by acquisition parameters
+
+Need all T1-weighted scans with a specific TR? `search_scans()` wraps the
+XML search API with a tidy interface:
+
+```{r search-scan-params}
+t1_scans <- search_scans(
+  project_id = "MY_PROJECT",
+  scan_type  = "T1",
+  tr         = 2300,
+  client     = client
+)
+t1_scans
+#> # A tibble: 12 × 8
+#>   subject_ID  Project     experiment_ID  Type  TR     TE    Flip  Orientation
+#>   <chr>       <chr>       <chr>          <chr> <dbl>  <dbl> <dbl> <chr>
+#> 1 SUBJ_001    MY_PROJECT  E00042         T1    2300   2.98  9     Sagittal
+#> 2 SUBJ_002    MY_PROJECT  E00087         T1    2300   2.98  9     Sagittal
+#>   …
+```
+
+The result includes the experiment ID, so you can pipe straight into a
+download:
+
+```{r download-matched-scans}
+for (i in seq_len(nrow(t1_scans))) {
+  download_experiment(
+    experiment_id = t1_scans$experiment_ID[i],
+    scan_id       = "ALL",
+    format        = "zip",
+    dest_dir      = "~/Downloads/t1_scans",
+    client        = client
+  )
+}
+```
+
+## Browse files before downloading
+
+Sometimes you want to see exactly what files exist before committing to a
+large download.
+
+```{r browse-files}
+# What resources does this scan have?
+resources <- list_resources(
+  project_id    = "MY_PROJECT",
+  subject_id    = "SUBJ_001",
+  experiment_id = "E00042",
+  scan_id       = "1",
+  client        = client
+)
+resources
+#> ── XNAT Resources ─────────────────────────────
+#> 3 resources
+#> # A tibble: 3 × 3
+#>   label    file_count  file_size
+#>   <chr>    <chr>       <chr>
+#> 1 DICOM    176         89.2 MB
+#> 2 NIFTI    2           45.1 MB
+#> 3 SNAPSHOTS 1          0.3 MB
+
+# List individual files in the NIFTI resource
+nifti_files <- list_files(
+  project_id    = "MY_PROJECT",
+  subject_id    = "SUBJ_001",
+  experiment_id = "E00042",
+  scan_id       = "1",
+  resource      = "NIFTI",
+  client        = client
+)
+nifti_files
+```
+
+Then download just the resource you need:
+
+```{r download-nifti-only}
+download_files(
+  project_id    = "MY_PROJECT",
+  subject_id    = "SUBJ_001",
+  experiment_id = "E00042",
+  scan_id       = "1",
+  resource      = "NIFTI",
+  dest_dir      = "~/Downloads",
+  client        = client
+)
+```
+
+## Build a local inventory of a project
+
+For analysis planning, it helps to have a flat table of every scan in a
+project. Combine `list_experiments()` and `list_scans()`:
+```{r inventory}
+# All sessions in the project
+sessions <- list_experiments("MY_PROJECT", client = client)
+
+# Collect scans for each session
+scan_list <- lapply(seq_len(nrow(sessions)), function(i) {
+  scans <- list_scans(
+    project_id    = sessions$project[i],
+    subject_id    = sessions$subject_ID[i],
+    experiment_id = sessions$ID[i],
+    client        = client
+  )
+  scans$experiment_id <- sessions$ID[i]
+  scans$subject_id    <- sessions$subject_ID[i]
+  scans$session_date  <- sessions$date[i]
+  scans
+})
+
+inventory <- do.call(rbind, scan_list)
+inventory
+```
+
+Now you can filter with standard R:
+
+```{r filter-inventory}
+# All BOLD scans acquired in 2024
+bold_2024 <- inventory[
+  inventory$type == "BOLD" & inventory$session_date >= "2024-01-01",
+]
+nrow(bold_2024)
+```
+
+## Use alias tokens for shared scripts
+
+Alias tokens are temporary credentials you can revoke without changing your
+password. They're ideal for scripts shared with collaborators or running on
+a cluster.
+
+```{r alias-token-workflow}
+# Issue a token (requires an active session)
+token <- xnat_token_issue(client = client)
+token$alias
+token$secret
+
+# Share the alias/secret with a colleague or put them in a job script
+colleague_client <- xnat_connect(
+  base_url = "https://central.xnat.org",
+  username = token$alias,
+  password = token$secret
+)
+
+# When the work is done, revoke the token
+xnat_token_invalidate(
+  alias  = token$alias,
+  secret = token$secret,
+  client = client
+)
+```
+
+List and audit active tokens:
+
+```{r token-audit}
+active_tokens <- xnat_token_list(client = client)
+active_tokens
+```
+
+## Clean up
+
+```{r cleanup}
+xnat_logout(invalidate_session = TRUE, client = client)
+```
