@@ -8,3 +8,7 @@
 ..Rcheck/
 *.tar.gz
 vignettes/*.html
+docs/
+.omc/
+.covr_result.rds
+.rcmdcheck_result.rds

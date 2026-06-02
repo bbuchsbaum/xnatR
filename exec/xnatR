@@ -1,0 +1,25 @@
+#!/usr/bin/env Rscript
+
+args <- commandArgs(trailingOnly = TRUE)
+
+script_arg <- grep("^--file=", commandArgs(FALSE), value = TRUE)
+script_path <- if (length(script_arg) > 0) sub("^--file=", "", script_arg[[1]]) else NA_character_
+repo_root <- if (!is.na(script_path)) normalizePath(file.path(dirname(script_path), ".."), mustWork = FALSE) else NA_character_
+
+if (!is.na(repo_root) &&
+    file.exists(file.path(repo_root, "DESCRIPTION")) &&
+    dir.exists(file.path(repo_root, "R")) &&
+    length(list.files(file.path(repo_root, "R"), pattern = "\\.R$", full.names = TRUE)) > 0 &&
+    requireNamespace("pkgload", quietly = TRUE)) {
+  pkgload::load_all(repo_root, export_all = FALSE, helpers = FALSE, quiet = TRUE)
+}
+
+status <- tryCatch(
+  xnatR::xnatR_cli(args),
+  error = function(e) {
+    message("xnatR: ", conditionMessage(e))
+    2L
+  }
+)
+
+quit(save = "no", status = as.integer(status))

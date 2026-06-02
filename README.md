@@ -85,53 +85,76 @@ Use `xnat_current_client()`, `xnat_server()`, `xnat_username()`,
 
 ## Command Line
 
-xnatR currently exposes an R API; it does not install a standalone `xnatR` shell
-command or an `install_cli()` helper. For command-line use, call exported
-functions with `Rscript -e` and pass credentials through environment variables,
-a config file, or `.netrc`.
+Install the command wrapper after installing the package:
+
+```r
+xnatR::install_cli("~/.local/bin", overwrite = TRUE)
+```
+
+If needed, add that directory to your `PATH`:
+
+```sh
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Check the command:
+
+```sh
+xnatR --help
+```
+
+The command reads credentials from `--host`, `--user`, and `--password`, or from
+the same environment variables, config file, and `.netrc` sources as the R API.
 
 ```sh
 export XNATR_HOST="https://central.xnat.org"
 export XNATR_USER="guest"
 export XNATR_PASS="guest"
-
-Rscript -e 'library(xnatR); client <- xnat_connect(); print(list_projects(client = client))'
 ```
 
-List subjects:
+List projects:
 
 ```sh
-Rscript -e 'library(xnatR); client <- xnat_connect(); print(list_subjects("CENTRAL_OASIS", client = client))'
+xnatR list-projects
+```
+
+List subjects as JSON:
+
+```sh
+xnatR list-subjects --project CENTRAL_OASIS --json
 ```
 
 List sessions for a project or a subject:
 
 ```sh
-Rscript -e 'library(xnatR); client <- xnat_connect(); print(list_experiments("CENTRAL_OASIS", client = client))'
-Rscript -e 'library(xnatR); client <- xnat_connect(); print(list_experiments("CENTRAL_OASIS", "OAS1_0001", client = client))'
+xnatR list-experiments --project CENTRAL_OASIS
+xnatR list-experiments --project CENTRAL_OASIS --subject OAS1_0001
+```
+
+List scans, resources, and files:
+
+```sh
+xnatR list-scans --project CENTRAL_OASIS --subject OAS1_0001 --experiment OAS1_0001_MR1
+xnatR list-resources --project CENTRAL_OASIS --subject OAS1_0001 --experiment OAS1_0001_MR1 --scan 1
+xnatR list-files --project CENTRAL_OASIS --subject OAS1_0001 --experiment OAS1_0001_MR1 --scan 1 --resource DICOM
+```
+
+Show the 10 most recent sessions:
+
+```sh
+xnatR recent-sessions --project CENTRAL_OASIS --n 10
 ```
 
 Download an experiment archive:
 
 ```sh
-Rscript -e 'library(xnatR); client <- xnat_connect(); download_experiment("OAS1_0001_MR1", dest_dir = "downloads", client = client)'
+xnatR download-experiment --experiment OAS1_0001_MR1 --dest-dir downloads --no-progress
 ```
 
-For longer workflows, put the R code in a script and run it with `Rscript`:
-
-```r
-#!/usr/bin/env Rscript
-library(xnatR)
-
-args <- commandArgs(trailingOnly = TRUE)
-project_id <- args[[1]]
-
-client <- xnat_connect()
-print(list_recent_sessions(project_id, n = 10, client = client))
-```
+You can also call the parser directly from R for advanced scripting:
 
 ```sh
-Rscript recent-sessions.R CENTRAL_OASIS
+Rscript -e 'xnatR::xnatR_cli(commandArgs(TRUE))' -- list-projects --json
 ```
 
 ## Listing and Browsing
