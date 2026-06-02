@@ -203,6 +203,25 @@ xnat_browse_subjects("CENTRAL_OASIS", client = client)
 In non-interactive contexts, pass `.interactive = FALSE` to return the listing
 tibble without prompting.
 
+### Fuzzy explorer (fzf)
+
+If the [`fzf`](https://github.com/junegunn/fzf) command is on your `PATH`,
+`xnat_explore()` opens a fuzzy-searchable, multi-select terminal browser that
+drills down the project → subject → experiment → scan hierarchy with a preview
+pane (DICOM headers at the scan level):
+
+```r
+chosen <- xnat_explore(client = client)
+
+# Jump straight to a known session's scans:
+xnat_explore("CENTRAL_OASIS", "OAS1_0001", "OAS1_0001_MR1", client = client)
+```
+
+Keys: `Enter` opens the highlighted item, `Tab` marks rows, `Ctrl-S` returns the
+marked rows (e.g. to feed `download_experiment()`), `Ctrl-D` downloads them to
+`dest_dir`, `Ctrl-E` jumps to every session in the project, `Ctrl-O` opens the
+item in the web UI, and `Esc` goes back a level (or exits at the top).
+
 ## Downloading
 
 ```r

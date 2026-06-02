@@ -32,5 +32,6 @@ Suggests:
     pkgload,
     knitr,
     rmarkdown
+SystemRequirements: fzf (optional, for the xnat_explore() terminal browser)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
