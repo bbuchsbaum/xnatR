@@ -149,6 +149,7 @@ install_cli <- function(dest_dir = "~/.local/bin", overwrite = FALSE, commands =
     "list-scans",
     "list-resources",
     "list-files",
+    "dicom-dump",
     "download-experiment"
   )
 }
@@ -157,7 +158,7 @@ install_cli <- function(dest_dir = "~/.local/bin", overwrite = FALSE, commands =
   value_options <- c(
     "host", "user", "password", "jsession",
     "columns", "limit", "offset",
-    "project", "subject", "experiment", "scan", "resource",
+    "project", "subject", "experiment", "scan", "resource", "fields",
     "n", "format", "dest-dir", "dest-file"
   )
   flag_options <- c(
@@ -290,6 +291,12 @@ install_cli <- function(dest_dir = "~/.local/bin", overwrite = FALSE, commands =
       resource = .xnatR_cli_required(opts$resource, "resource"),
       client = client
     ),
+    "dicom-dump" = dicom_dump(
+      experiment_id = .xnatR_cli_required(opts$experiment, "experiment"),
+      scan_id = opts$scan %||% NULL,
+      fields = .xnatR_cli_columns(opts$fields %||% NULL),
+      client = client
+    ),
     "download-experiment" = download_experiment(
       experiment_id = .xnatR_cli_required(opts$experiment, "experiment"),
       scan_id = opts$scan %||% "ALL",
@@ -373,6 +380,7 @@ install_cli <- function(dest_dir = "~/.local/bin", overwrite = FALSE, commands =
       "  list-scans          List scans in an experiment",
       "  list-resources      List resources for a scan",
       "  list-files          List files for a scan resource",
+      "  dicom-dump          Dump DICOM header fields for a session or scan",
       "  download-experiment Download an experiment archive",
       "",
       "Common options:",
@@ -431,6 +439,15 @@ install_cli <- function(dest_dir = "~/.local/bin", overwrite = FALSE, commands =
       "",
       "Example:",
       "  xnatR list-files --project CENTRAL_OASIS --subject OAS1_0001 --experiment OAS1_0001_MR1 --scan 1 --resource DICOM"
+    ), collapse = "\n"),
+    "dicom-dump" = paste(c(
+      "Usage: xnatR dicom-dump --experiment EXPERIMENT [--scan SCAN] [--fields TAGS] [--json]",
+      "",
+      "TAGS is a comma-separated list of DICOM tags, e.g. 00080060,00180080",
+      "(also accepts (0008,0060) form). Omit --fields to dump every field.",
+      "",
+      "Example:",
+      "  xnatR dicom-dump --experiment OAS1_0001_MR1 --scan 1 --fields 00080060,00180080"
     ), collapse = "\n"),
     "download-experiment" = paste(c(
       "Usage: xnatR download-experiment --experiment EXPERIMENT [--scan SCAN] [--format zip|tar.gz] [--dest-dir DIR] [--dest-file FILE] [--extract] [--no-progress] [--no-strict] [--json]",

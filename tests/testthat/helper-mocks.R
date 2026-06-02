@@ -84,6 +84,17 @@ mock_files <- function(n = 5) {
   )
 }
 
+# Mock DICOM dump data - returns data.frame matching the dicomdump ResultSet
+mock_dicom_dump <- function() {
+  data.frame(
+    tag1 = c("(0008,0060)", "(0018,0080)", "(0018,0081)", "(0018,1030)"),
+    vr = c("CS", "DS", "DS", "LO"),
+    value = c("MR", "2000", "3.0", "T1_MPRAGE"),
+    desc = c("Modality", "Repetition Time", "Echo Time", "Protocol Name"),
+    stringsAsFactors = FALSE
+  )
+}
+
 # Mock assessor data - returns data.frame
 mock_assessors <- function(n = 2) {
   data.frame(

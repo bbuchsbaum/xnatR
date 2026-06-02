@@ -139,6 +139,14 @@ xnatR list-resources --project CENTRAL_OASIS --subject OAS1_0001 --experiment OA
 xnatR list-files --project CENTRAL_OASIS --subject OAS1_0001 --experiment OAS1_0001_MR1 --scan 1 --resource DICOM
 ```
 
+Inspect DICOM header fields without downloading the images (DICOM-backed scans
+only). Tags are comma-separated and accept `00080060` or `(0008,0060)` form;
+omit `--fields` to dump everything:
+
+```sh
+xnatR dicom-dump --experiment OAS1_0001_MR1 --scan 1 --fields 00080060,00180080
+```
+
 Show the 10 most recent sessions:
 
 ```sh

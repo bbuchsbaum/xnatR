@@ -89,7 +89,10 @@ xnat_get <- function(path, query = NULL, client = NULL) {
   }
 
   if (length(query) > 0) {
-    req <- httr2::req_url_query(req, !!!query)
+    # `.multi = "explode"` lets a single key carry several values (e.g. the
+    # repeated `field=` parameters used by the DICOM dump service). Length-1
+    # values are unaffected.
+    req <- httr2::req_url_query(req, !!!query, .multi = "explode")
   }
 
   resp <- httr2::req_perform(req)
