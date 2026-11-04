@@ -526,5 +526,5 @@ cover these behaviors but do not establish acceptance on the private server.
 
 The ordered live-acceptance steps, required evidence, and protection of the
 existing downloader are recorded in the
-[live qualification plan](.planning/LIVE-QUALIFICATION.md). That plan remains
-pending; the next action is to freeze the source and use an isolated R library.
+[live qualification plan](.planning/LIVE-QUALIFICATION.md). Current progress,
+validation evidence and the next action are tracked in that plan.

@@ -1,14 +1,17 @@
 # Live qualification: eight-session discovery-to-verified-download workflow
 
-Recorded: 2026-11-04. Status: **planned; not executed**.
+Recorded and resumed: 2026-11-04. Status: **source frozen and locally validated;
+credential-free diagnostics complete; authenticated qualification pending**.
 
-All three implementation tranches are locally delivered. The current code has
-757 passing assertions, one real-fzf test skipped, and a final package check with
-Status: OK (tests run separately). These are local results, not acceptance on the
-private server. Implementation changes are currently uncommitted.
+All three implementation tranches are locally delivered. The frozen implementation
+at `6e80224a001027fad4fcbacbd311bd5c4a9452d4` has 775 passing installed-package
+assertions, one real-fzf test skipped, and a package check with Status: OK (tests
+run separately). These are local results, not acceptance on the private server.
+See [the qualification receipt](QUALIFICATION-2026-11-04.md) for the artifact hash,
+environment, regression fix, evidence locations and credential-entry launcher.
 
-This plan records the next steps agreed in the conversation. Recording it does
-not mark any step complete or start a live download.
+The original handoff recorded the agreed sequence. The resumed work completed
+step 1 and the credential-free portion of step 2; no live download has started.
 
 ## Scope and protection of existing work
 
@@ -30,7 +33,7 @@ references only, never passwords, tokens, cookies or participant payloads.
 
 ## Ordered steps and evidence
 
-- [ ] **1. Freeze the implementation and isolate the installation.** Review the
+- [x] **1. Freeze the implementation and isolate the installation.** Review the
   current changes, create a local commit, and record its SHA. Build/install that
   exact source into a dedicated R library. Record the source artifact hash, R and
   dependency versions, system curl/unzip versions and validation results. Do not
@@ -104,10 +107,17 @@ source revision. Until that evidence exists, live qualification remains open.
 
 ## Current evidence and next action
 
-- Local implementation/test handoff: 2026-11-04; 757 passing assertions, one fzf
-  skip; final `R CMD check --no-manual --no-tests` returned Status: OK after tests
-  passed separately, including installed-package tests.
-- Source commit, live plan fingerprint, private artifact location, live transfer
-  counts and final run summary: **not yet recorded**.
-- Next action: step 1. This documentation update performs no commit, installation,
-  credential prompt, live inventory, download, PR or publication.
+- Source freeze and isolated installation: complete. Installed-package tests:
+  775 passed, one fzf skip, no failures, errors or warnings. `R CMD check
+  --no-manual --no-tests`: Status: OK; both vignettes built successfully.
+- Credential-free diagnostics on that installed build: system curl reaches the
+  server with TLS verified and HTTP 401; httr2 reports a network failure. This
+  establishes reachability only, not authenticated access or a diagnosed root cause.
+- Existing downloader: its current private summary reports completion for eight
+  sessions and 241 scans. The summary was read without modifying the downloader
+  or its artifacts; this is not xnatR qualification or an independent archive audit.
+- Live plan fingerprint, authenticated discovery, interruption/reuse evidence,
+  live transfer counts and final xnatR summary: **not yet established**.
+- Next action: enter credentials locally using the prepared Terminal launcher
+  documented in the receipt. It performs discovery and saves the separate plan;
+  archive execution follows review under steps 3-5. No credentials belong in chat.

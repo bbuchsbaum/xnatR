@@ -8,7 +8,10 @@ are locally implemented and tested. The active next milestone is the
 install in an isolated R library, discover through R/system curl, save the exact
 selection, demonstrate interruption/reuse, establish whole-selection completeness,
 and prepare delivery after recording qualification evidence. Protect the existing
-downloader and use a separate destination. All live-qualification steps are pending.
+downloader and use a separate destination. Source freezing, isolated installation
+and local validation are complete; credential-free system-curl diagnostics passed.
+Authenticated discovery and all live transfer acceptance steps remain pending.
+See the [qualification receipt](QUALIFICATION-2026-11-04.md).
 
 The original phases below are retained as a historical broader roadmap; their
 old completion counts are not the current workflow status and have not been
