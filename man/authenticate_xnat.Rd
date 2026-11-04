@@ -10,7 +10,9 @@ authenticate_xnat(
   password = NULL,
   ssl_verify = TRUE,
   verify = TRUE,
-  use_jsession = FALSE
+  use_jsession = FALSE,
+  backend = c("httr2", "curl"),
+  credential_callback = NULL
 )
 }
 \arguments{
@@ -30,6 +32,12 @@ then config file, then .netrc.}
 
 \item{use_jsession}{Whether to establish a JSESSION cookie-based session instead
 of using Basic Auth for each request. Can improve performance. Default FALSE.}
+
+\item{backend}{Transport backend: \code{httr2} (default) or system \code{curl}.}
+
+\item{credential_callback}{Function returning a username/password list, or NULL
+to cancel. Diagnoses connectivity before calling it. Uses JSESSION, discards
+the supplied password, and calls again once on an expired read request.}
 }
 \value{
 Invisibly returns TRUE if authentication is successful.

@@ -199,13 +199,7 @@
       on_open = function(row, ctx) {
         if (is.null(ctx$subject_id)) {
           sid <- .resolve_subject_id(row)
-          if (is.na(sid)) {
-            cli::cli_abort(c(
-              "Could not determine the subject for this session.",
-              "i" = "Its scans cannot be listed without a subject id."
-            ))
-          }
-          ctx$subject_id <- sid
+          if (!is.na(sid)) ctx$subject_id <- sid
         }
         ctx
       }

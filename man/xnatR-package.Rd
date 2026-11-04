@@ -19,5 +19,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Bradley Buchsbaum \email{brad.buchsbaum@gmail.com}
 
+Authors:
+\itemize{
+  \item Bradley Buchsbaum \email{brad.buchsbaum@gmail.com}
+}
+
 }
 \keyword{internal}

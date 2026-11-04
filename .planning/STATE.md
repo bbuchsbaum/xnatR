@@ -1,67 +1,42 @@
 # Project State
 
-## Project Reference
+Updated: 2026-11-04.
 
-See: .planning/PROJECT.md (updated 2026-01-26)
+## Current focus
 
-**Core value:** Researchers can programmatically access and download any data from an XNAT server using idiomatic R functions, with robust authentication and session management that "just works."
+The discovery-to-verified-download implementation has completed three local
+tranches: transport/authentication, inventory/planning, and verified execution
+with restart. The next gate is **live qualification of the actual eight-session
+job**, following [LIVE-QUALIFICATION.md](LIVE-QUALIFICATION.md).
 
-**Current focus:** Phase 1 - Auth & HTTP Infrastructure
+Local validation: 757 passing assertions, one real-fzf test skipped, and final
+package check Status: OK with tests run separately. Implementation and subsequent
+planning changes remain uncommitted. No authenticated live acceptance run has
+been completed with this code, and the existing downloader was left untouched.
 
-## Current Position
+## Next steps
 
-Phase: 1 of 4 (Auth & HTTP Infrastructure)
-Plan: Not yet planned
-Status: Ready to plan
-Last activity: 2026-01-26 — Roadmap created
+1. Freeze the implementation in a local commit and install it into an isolated R library.
+2. Diagnose connectivity before credentials, then discover through R/system curl
+   and compare with the existing owner-confirmed eight-session selection.
+3. Review and save the exact DICOM plan, catalogs, counts, sizes and destinations.
+4. Complete one resource, interrupt another, and restart the same full plan in a
+   separate destination; prove verified resources are not downloaded again.
+5. Require whole-selection completeness and an all-reuse rerun.
+6. Record qualification evidence, commit any fixes and prepare the release or PR.
 
-Progress: [░░░░░░░░░░] 0%
+All six live-qualification steps are pending. The detailed plan defines evidence,
+source-change refusals, protection of the existing download, and privacy scope.
 
-## Performance Metrics
+## Historical roadmap
 
-**Velocity:**
-- Total plans completed: 0
-- Average duration: N/A
-- Total execution time: 0.0 hours
+The January 2026 phase checklist and metrics in [ROADMAP.md](ROADMAP.md) are
+historical and have not been reconciled requirement by requirement. Local delivery
+of the three current workflow tranches is not a claim of complete CRAN or broader
+roadmap qualification.
 
-**By Phase:**
+## Session continuity
 
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| - | - | - | - |
-
-**Recent Trend:**
-- Last 5 plans: None yet
-- Trend: N/A
-
-*Updated after each plan completion*
-
-## Accumulated Context
-
-### Decisions
-
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-None yet.
-
-### Pending Todos
-
-[From .planning/todos/pending/ — ideas captured during sessions]
-
-None yet.
-
-### Blockers/Concerns
-
-[Issues that affect future work]
-
-**Brownfield context:**
-- Existing codebase has basic auth (password/token), list_projects, list_subjects, list_experiments, list_scans, and basic download functions
-- Phase 1 builds on existing authenticate_xnat() function rather than rewriting from scratch
-- Existing functions use package environment (xnatR_env) for credential caching - maintain this pattern
-
-## Session Continuity
-
-Last session: 2026-01-26 (roadmap creation)
-Stopped at: Roadmap and STATE.md created, ready for Phase 1 planning
-Resume file: None
+Last activity: user requested that shared memory and the repository plan capture
+the live-qualification sequence. Resume at step 1 of LIVE-QUALIFICATION.md.
+This handoff records a plan; it does not launch the live job.

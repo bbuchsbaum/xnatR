@@ -12,7 +12,9 @@ xnat_connect(
   verify = TRUE,
   use_jsession = FALSE,
   jsession = NULL,
-  xnat_name = NULL
+  xnat_name = NULL,
+  backend = c("httr2", "curl"),
+  credential_callback = NULL
 )
 }
 \arguments{
@@ -34,6 +36,12 @@ cookie auth and do not send Basic Auth.}
 
 \item{xnat_name}{Optional server nickname used for compatibility with Rxnat-style
 environment variables (\verb{<XNAT_NAME>_RXNAT_USER}, \verb{<XNAT_NAME>_RXNAT_PASS}).}
+
+\item{backend}{Transport backend: \code{httr2} (default) or system \code{curl}.}
+
+\item{credential_callback}{Function returning a username/password list, or NULL
+to cancel. Diagnoses connectivity before calling it. Uses JSESSION, discards
+the supplied password, and calls again once on an expired read request.}
 }
 \value{
 \code{xnat_connect()} returns an \code{xnat_client}.

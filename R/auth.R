@@ -15,6 +15,7 @@
 #' @param use_jsession Whether to establish a JSESSION cookie-based session instead
 #'   of using Basic Auth for each request. Can improve performance. Default FALSE.
 #'
+#' @inheritParams xnat_connect
 #' @return Invisibly returns TRUE if authentication is successful.
 #'
 #' @examples
@@ -57,7 +58,19 @@ authenticate_xnat <- function(base_url = NULL,
                                password = NULL,
                                ssl_verify = TRUE,
                                verify = TRUE,
-                               use_jsession = FALSE) {
+                               use_jsession = FALSE,
+                               backend = c("httr2", "curl"),
+                               credential_callback = NULL) {
+  backend <- match.arg(backend)
+  if (backend == "curl" || !is.null(credential_callback)) {
+    client <- xnat_connect(base_url, username, password, ssl_verify, verify,
+      use_jsession, backend = backend, credential_callback = credential_callback)
+    for (key in names(client)) xnatR_env[[key]] <- client[[key]]
+    return(invisible(TRUE))
+  }
+  xnatR_env$backend <- "httr2"
+  xnatR_env$session <- NULL
+  xnatR_env$credential_callback <- NULL
   # Resolve credentials from multiple sources
   creds <- resolve_credentials(base_url, username, password)
 
@@ -117,7 +130,8 @@ authenticate_xnat <- function(base_url = NULL,
       xnatR_env$password <- NULL
       xnatR_env$jsession <- NULL
 
-      if (inherits(e, "httr2_http_401") || inherits(e, "httr2_http_403")) {
+      if (inherits(e, "xnatR_transport_error")) stop(e)
+      if (inherits(e, "httr2_http_401")) {
         cli::cli_abort(c(
           "Authentication failed.",
           "x" = "Invalid username or password."
@@ -144,7 +158,7 @@ authenticate_xnat <- function(base_url = NULL,
 #' @param ssl_verify Whether to verify SSL certificates
 #' @return JSESSION ID string
 #' @noRd
-establish_jsession <- function(base_url, username, password, ssl_verify = TRUE) {
+establish_jsession <- function(base_url, username, password, ssl_verify = TRUE, backend = "httr2") {
   req <- httr2::request(sub("/+$", "", base_url)) |>
     httr2::req_url_path_append("data/JSESSION") |>
     httr2::req_auth_basic(username, password) |>
@@ -154,7 +168,8 @@ establish_jsession <- function(base_url, username, password, ssl_verify = TRUE) 
     req <- httr2::req_options(req, ssl_verifypeer = FALSE)
   }
 
-  resp <- httr2::req_perform(req)
+  req$xnatr_credentials <- list(username = username, password = password)
+  resp <- xnat_perform(req, backend = backend, renew = FALSE)
   httr2::resp_body_string(resp)
 }
 
@@ -167,14 +182,14 @@ establish_jsession <- function(base_url, username, password, ssl_verify = TRUE) 
 #' @param ssl_verify Whether to verify SSL certificates.
 #' @return JSESSION ID string.
 #' @noRd
-establish_anonymous_jsession <- function(base_url, ssl_verify = TRUE) {
+establish_anonymous_jsession <- function(base_url, ssl_verify = TRUE, backend = "httr2") {
   req <- httr2::request(sub("/+$", "", base_url))
 
   if (!isTRUE(ssl_verify)) {
     req <- httr2::req_options(req, ssl_verifypeer = FALSE)
   }
 
-  resp <- httr2::req_perform(req)
+  resp <- xnat_perform(req, backend = backend, renew = FALSE)
   cookies <- httr2::resp_headers(resp)[["set-cookie"]]
 
   if (is.null(cookies) || !nzchar(cookies)) {
@@ -358,6 +373,12 @@ ssl_verify: true
 #'
 #' @export
 xnat_logout <- function(invalidate_session = FALSE) {
+  on.exit({
+    if (!is.null(xnatR_env$session)) xnatR_env$session$jsession <- NULL
+    xnatR_env$session <- NULL
+    xnatR_env$credential_callback <- NULL
+    xnatR_env$backend <- "httr2"
+  }, add = TRUE)
   if (invalidate_session && !is.null(xnatR_env$jsession)) {
     tryCatch({
       xnat_delete("data/JSESSION")

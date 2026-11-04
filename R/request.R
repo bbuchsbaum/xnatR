@@ -40,6 +40,8 @@ xnat_request <- function(path, client = NULL) {
   base_url <- if (is.null(client)) xnatR_env$base_url else client$base_url
   ssl_verify <- if (is.null(client)) xnatR_env$ssl_verify else client$ssl_verify
   jsession <- if (is.null(client)) xnatR_env$jsession else client$jsession
+  owner <- client %||% xnatR_env
+  jsession <- owner$session$jsession %||% jsession
   username <- if (is.null(client)) xnatR_env$username else client$username
   password <- if (is.null(client)) xnatR_env$password else client$password
 
@@ -53,6 +55,7 @@ xnat_request <- function(path, client = NULL) {
     req <- httr2::req_headers(req, Cookie = paste0("JSESSIONID=", jsession))
   } else {
     req <- httr2::req_auth_basic(req, username, password)
+    req$xnatr_credentials <- list(username = username, password = password)
   }
 
   req <- req |>
@@ -95,8 +98,8 @@ xnat_get <- function(path, query = NULL, client = NULL) {
     req <- httr2::req_url_query(req, !!!query, .multi = "explode")
   }
 
-  resp <- httr2::req_perform(req)
-  httr2::resp_body_json(resp)
+  resp <- xnat_perform(req, client = client)
+  httr2::resp_body_json(resp, bigint_as_char = TRUE)
 }
 
 #' Perform a GET request and parse as XNAT ResultSet tibble
@@ -141,12 +144,12 @@ xnat_post <- function(path, body = NULL, query = NULL, client = NULL) {
   }
 
   req <- httr2::req_method(req, "POST")
-  resp <- httr2::req_perform(req)
+  resp <- xnat_perform(req, client = client)
 
   # Return parsed JSON if available, otherwise NULL
   if (httr2::resp_has_body(resp)) {
     tryCatch(
-      httr2::resp_body_json(resp),
+      httr2::resp_body_json(resp, bigint_as_char = TRUE),
       error = function(e) NULL
     )
   } else {
@@ -164,7 +167,7 @@ xnat_delete <- function(path, client = NULL) {
   req <- xnat_request(path, client = client) |>
     httr2::req_method("DELETE")
 
-  httr2::req_perform(req)
+  xnat_perform(req, client = client)
   invisible(TRUE)
 }
 
@@ -191,6 +194,6 @@ xnat_download <- function(path, dest_file, query = NULL, progress = TRUE, client
     req <- httr2::req_progress(req)
   }
 
-  httr2::req_perform(req, path = dest_file)
+  xnat_perform(req, client = client, path = dest_file)
   invisible(dest_file)
 }

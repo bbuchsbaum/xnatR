@@ -18,6 +18,10 @@
 #' @param xnat_name Optional server nickname used for compatibility with Rxnat-style
 #'   environment variables (`<XNAT_NAME>_RXNAT_USER`, `<XNAT_NAME>_RXNAT_PASS`).
 #'
+#' @param backend Transport backend: `httr2` (default) or system `curl`.
+#' @param credential_callback Function returning a username/password list, or NULL
+#'   to cancel. Diagnoses connectivity before calling it. Uses JSESSION, discards
+#'   the supplied password, and calls again once on an expired read request.
 #' @return `xnat_connect()` returns an `xnat_client`.
 #' @export
 #'
@@ -39,7 +43,10 @@ xnat_connect <- function(base_url = NULL,
                          verify = TRUE,
                          use_jsession = FALSE,
                          jsession = NULL,
-                         xnat_name = NULL) {
+                         xnat_name = NULL,
+                         backend = c("httr2", "curl"),
+                         credential_callback = NULL) {
+  backend <- match.arg(backend)
   if (!is.null(xnat_name)) {
     check_string(xnat_name, "xnat_name")
     prefix <- toupper(xnat_name)
@@ -79,24 +86,43 @@ xnat_connect <- function(base_url = NULL,
     username = creds$username,
     password = creds$password,
     ssl_verify = ssl_verify,
-    jsession = jsession
+    jsession = jsession,
+    backend = backend
   )
+
+  if (!is.null(credential_callback)) {
+    if (!is.function(credential_callback)) rlang::abort("credential_callback must be a function.")
+    diagnostic <- xnat_diagnose(client$base_url, backend)
+    if (!diagnostic$reachable) transport_abort(diagnostic$category)
+    client$credential_callback <- credential_callback
+    if (is.null(client$jsession)) {
+      supplied <- request_credentials(credential_callback)
+      client$username <- supplied$username
+      client$password <- supplied$password
+    }
+    use_jsession <- TRUE
+  }
 
   if (use_jsession && is.null(client$jsession)) {
     if (is.null(client$username) || is.null(client$password)) {
       client$jsession <- establish_anonymous_jsession(
         base_url = client$base_url,
-        ssl_verify = client$ssl_verify
+        ssl_verify = client$ssl_verify,
+        backend = backend
       )
     } else {
       client$jsession <- establish_jsession(
         base_url = client$base_url,
         username = client$username,
         password = client$password,
-        ssl_verify = client$ssl_verify
+        ssl_verify = client$ssl_verify,
+        backend = backend
       )
     }
   }
+
+  client$session$jsession <- client$jsession
+  if (!is.null(credential_callback)) client$password <- NULL
 
   if (verify) {
     xnat_get("data/projects", client = client)
@@ -116,14 +142,16 @@ xnat_connect <- function(base_url = NULL,
 #' @param ssl_verify Whether to verify SSL certificates. Default `TRUE`.
 #' @param jsession Optional JSESSIONID value.
 #'
+#' @param backend Transport backend: `httr2` or system `curl`.
 #' @return An `xnat_client`.
 #' @export
 xnat_client <- function(base_url,
                         username = NULL,
                         password = NULL,
                         ssl_verify = TRUE,
-                        jsession = NULL) {
-  check_string(base_url, "base_url")
+                        jsession = NULL, backend = c("httr2", "curl")) {
+  backend <- match.arg(backend)
+  validate_server_url(base_url)
   base_url <- sub("/+$", "", base_url)
 
   if (!is.null(username) && !is.null(password)) {
@@ -131,13 +159,17 @@ xnat_client <- function(base_url,
     check_string(password, "password")
   }
 
+  session <- new.env(parent = emptyenv())
+  session$jsession <- jsession
   structure(
     list(
       base_url = base_url,
       username = username,
       password = password,
       ssl_verify = isTRUE(ssl_verify),
-      jsession = jsession
+      jsession = jsession,
+      backend = backend,
+      session = session
     ),
     class = "xnat_client"
   )
@@ -165,13 +197,17 @@ print.xnat_client <- function(x, ...) {
 #' @export
 xnat_current_client <- function() {
   if (is.null(xnatR_env$base_url)) return(NULL)
-  xnat_client(
+  client <- xnat_client(
     base_url = xnatR_env$base_url,
     username = xnatR_env$username,
     password = xnatR_env$password,
     ssl_verify = xnatR_env$ssl_verify,
-    jsession = xnatR_env$jsession
+    jsession = xnatR_env$session$jsession %||% xnatR_env$jsession,
+    backend = xnatR_env$backend %||% "httr2"
   )
+  client$credential_callback <- xnatR_env$credential_callback
+  client$session <- xnatR_env$session %||% client$session
+  client
 }
 
 #' Temporarily use a client as the global session
@@ -190,6 +226,10 @@ with_xnat_client <- function(client, expr) {
   }
 
   old <- xnat_current_client()
+  extra <- lapply(c("backend", "session", "credential_callback"), function(k) xnatR_env[[k]])
+  names(extra) <- c("backend", "session", "credential_callback")
+  on.exit(for (k in names(extra)) xnatR_env[[k]] <- extra[[k]], add = TRUE)
+  for (k in names(extra)) xnatR_env[[k]] <- client[[k]]
   on.exit({
     if (is.null(old)) {
       xnatR_env$base_url <- NULL

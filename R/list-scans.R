@@ -2,8 +2,9 @@
 #'
 #' Retrieves a list of scans from a specific experiment.
 #'
-#' @param project_id The project identifier (required).
-#' @param subject_id The subject identifier (required).
+#' @param project_id Optional project identifier.
+#' @param subject_id Optional subject identifier. If omitted, uses the experiment-scoped route;
+#'   experiment_id must then be a canonical experiment ID.
 #' @param experiment_id The experiment identifier (required).
 #' @param columns Character vector of column names to include.
 #' @param limit Maximum number of results to return.
@@ -32,13 +33,15 @@
 #' }
 #'
 #' @export
-list_scans <- function(project_id, subject_id, experiment_id,
+list_scans <- function(project_id = NULL, subject_id = NULL, experiment_id,
                        columns = NULL, limit = NULL, offset = NULL, client = NULL) {
-  check_string(project_id, "project_id")
-  check_string(subject_id, "subject_id")
+  if (!is.null(project_id)) check_string(project_id, "project_id")
+  if (!is.null(subject_id)) check_string(subject_id, "subject_id")
   check_string(experiment_id, "experiment_id")
 
-  path <- xnat_path(
+  path <- if (is.null(project_id) || is.null(subject_id)) {
+    xnat_path("data/experiments", url_encode(experiment_id), "scans")
+  } else xnat_path(
     "data/projects", url_encode(project_id),
     "subjects", url_encode(subject_id),
     "experiments", url_encode(experiment_id),

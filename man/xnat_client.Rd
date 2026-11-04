@@ -9,7 +9,8 @@ xnat_client(
   username = NULL,
   password = NULL,
   ssl_verify = TRUE,
-  jsession = NULL
+  jsession = NULL,
+  backend = c("httr2", "curl")
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ xnat_client(
 \item{ssl_verify}{Whether to verify SSL certificates. Default \code{TRUE}.}
 
 \item{jsession}{Optional JSESSIONID value.}
+
+\item{backend}{Transport backend: \code{httr2} or system \code{curl}.}
 }
 \value{
 An \code{xnat_client}.
