@@ -42,5 +42,8 @@ roadmap qualification.
 Last activity: resumed the saved qualification sequence, fixed and regression-tested
 source-change stopping, committed the implementation, built/installed the exact
 source and validated it. Authentication awaits user entry in Terminal. The
-discovery launcher is prepared and syntax-checked but has not been run with live
-credentials. No push, PR or release has occurred.
+discovery launcher initially failed before login because its processx child could
+not open `/dev/tty`; the callback incorrectly returned cancellation. The repaired
+launcher passed five synthetic-terminal tests, including hidden password entry,
+interruptions and distinct missing-terminal errors. Its command path is unchanged.
+Authenticated discovery still awaits user login. No push, PR or release has occurred.
