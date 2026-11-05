@@ -1,7 +1,7 @@
 # Live qualification: eight-session discovery-to-verified-download workflow
 
 Recorded and resumed: 2026-11-04. Status: **source frozen and locally validated;
-credential-free diagnostics complete; authenticated qualification pending**.
+authentication succeeded; discovery incomplete after HTTP 403**.
 
 All three implementation tranches are locally delivered. The frozen implementation
 at `6e80224a001027fad4fcbacbd311bd5c4a9452d4` has 775 passing installed-package
@@ -11,7 +11,11 @@ See [the qualification receipt](QUALIFICATION-2026-11-04.md) for the artifact ha
 environment, regression fix, evidence locations and credential-entry launcher.
 
 The original handoff recorded the agreed sequence. The resumed work completed
-step 1 and the credential-free portion of step 2; no live download has started.
+step 1 and authentication in step 2. All-project discovery stopped with HTTP 403;
+the failed endpoint was not captured. The next attempt is explicitly scoped to
+the owner-confirmed project, retaining strict completeness inside that scope.
+This does not qualify the original all-project discovery component. No live
+download has started.
 
 ## Scope and protection of existing work
 
@@ -116,8 +120,13 @@ source revision. Until that evidence exists, live qualification remains open.
 - Existing downloader: its current private summary reports completion for eight
   sessions and 241 scans. The summary was read without modifying the downloader
   or its artifacts; this is not xnatR qualification or an independent archive audit.
-- Live plan fingerprint, authenticated discovery, interruption/reuse evidence,
+- Authentication succeeded on the next user run; subsequent all-project discovery
+  failed with HTTP 403. The failing request is unknown because that launcher saved
+  only an error class. Project-scoped continuation and private endpoint diagnostics
+  are prepared and synthetically tested; live success remains unverified.
+- Live plan fingerprint, complete authenticated discovery, interruption/reuse evidence,
   live transfer counts and final xnatR summary: **not yet established**.
 - Next action: enter credentials locally using the prepared Terminal launcher
-  documented in the receipt. It performs discovery and saves the separate plan;
+  documented in the receipt. It now explicitly scopes discovery to the confirmed
+  project and saves the separate plan; all-project discovery remains an open gate.
   archive execution follows review under steps 3-5. No credentials belong in chat.

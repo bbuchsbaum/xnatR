@@ -60,7 +60,7 @@ Run this prepared launcher in macOS Terminal and enter credentials there:
 ```
 
 It reads the existing private reference selections, checks their agreement,
-discovers date-filtered sessions across accessible projects through R, compares
+discovers date-filtered sessions within the owner-confirmed project through R, compares
 canonical session/subject associations, and creates a plan for a separate private
 destination. It does not start archive transfers. Credentials are not written to
 files or command arguments. Review the exact saved plan before proceeding through
@@ -95,4 +95,37 @@ Both R scripts parse and the shell syntax check passes.
 The launcher path is unchanged. Evidence and the original launcher are retained
 under `evidence/prompt-repair/` in the local workspace. This repair changes the
 operational launcher only; the frozen package commit and 775-assertion result
-remain unchanged. Authenticated live discovery still awaits a successful login.
+remain unchanged. The next user attempt authenticated; its discovery failure and
+the revised explicit scope are recorded below.
+
+## Permission failure and explicit project scope
+
+The next user run successfully authenticated but all-project inventory stopped
+with `xnatR_permission_error` (HTTP 403). Its local failure timestamp is
+2026-11-05T00:02:22Z. That launcher retained only the error class, so the exact
+denied endpoint cannot be recovered. There is no evidence yet that the denial
+occurred in an unrelated project, the confirmed project, or collection pagination.
+No inventory or plan was saved.
+
+The prepared continuation now explicitly passes the already owner-confirmed
+project to `xnat_inventory(project_ids = ...)`. This narrows the requested scope
+without skipping requests, permission errors, unknowns or completeness checks
+inside that scope. The original all-project discovery component remains failed
+and unqualified; `--all-projects` retains that diagnostic route. No automatic
+fallback changes the scope of a running attempt. A future saved plan receipt
+records the actual discovery scope.
+
+The launcher also records each inventory/planning failure in a separate private
+JSON file containing phase, error class, HTTP status, relative collection endpoint
+and validated pagination fields when available. It never serializes a request,
+response, condition/trace, client, headers, credentials or arbitrary query values.
+Console output gives the private diagnostic path. Previous failure records are
+retained. The package source and frozen installed artifact are unchanged.
+
+Twenty-three synthetic checks passed against the installed package: explicit
+project scope avoids unrelated-project requests; all-project and selected-project
+denials still abort; endpoint/status/phase are captured accurately; query and
+condition secrets are excluded; private records use mode 0600; source-change
+errors retain their class. R and shell syntax checks also passed. Evidence is in
+`evidence/discovery-scope-repair/` in the qualification workspace. Live scoped
+discovery still requires the user's next login and has not been claimed successful.
