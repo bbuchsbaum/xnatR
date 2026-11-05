@@ -1,6 +1,7 @@
 # File-catalog protocol correction and qualification receipt
 
-Recorded: 2026-11-04 (local date). Live planning remains open.
+Recorded: 2026-11-04 (local date). Live planning and saved-plan review passed;
+archive execution remains open.
 
 ## Observed refusal and protocol basis
 
@@ -62,14 +63,37 @@ and shared parsing/request/authentication implementations are unchanged.
 This supports reusing discovery evidence, not transferring live planning or
 execution acceptance between revisions.
 
-The existing launcher now loads the new isolated package and prints source
-`96fc105`. Resume with:
+The existing launcher loads the new isolated package and prints source `96fc105`.
+The successful run used:
 
 ```sh
 /private/tmp/xnatr-live-qualification-20261104/discover.command --plan-only
 ```
 
 The planner rechecks live membership, metadata, resources and file catalogs. A
-future plan receipt will separately record its current package source and the
-inventory's original source. No live plan or xnatR archive transfer has completed.
-The all-project discovery HTTP 403 remains a separate unresolved gate.
+plan receipt separately records its current package source and the inventory's
+original source. The all-project discovery HTTP 403 remains a separate unresolved
+gate.
+
+## Successful live plan and review
+
+Live planning completed at 2026-11-05T00:49:19Z (November 4, 19:49 Toronto).
+At the following status check the saved JSON was reread with the frozen installed
+package. Its fingerprint, per-resource catalog fingerprints, canonical
+session/subject associations against both private references, inventory scan and
+DICOM resource sets, receipt consistency and separate destinations passed review.
+Independent Python integer arithmetic also confirmed all per-resource counts and
+byte totals. The plan contains eight sessions, 241 scans/resources, 13,715 files,
+28,731,975,360 uncompressed bytes and zero excluded scans.
+
+Plan fingerprint:
+`795b525309b28868849a1cda41b3a6a7f3da2719b7cad7f0a3ce55c2364d2ee7`.
+Private workspace evidence: `private/reviewed-plan.json`,
+`private/discovery-receipt.json` and `private/plan-review.json`. The earlier failure
+records remain historical evidence and do not describe this successful run.
+
+No xnatR archive downloads have started. The destination archive directory is
+absent; available disk space at review was approximately 95.54 GB. That snapshot
+is not a prediction of compressed archive sizes and must be refreshed before
+execution. The next gate is interruption and verified restart of this same full
+saved plan, followed by complete-selection verification and an all-reuse rerun.

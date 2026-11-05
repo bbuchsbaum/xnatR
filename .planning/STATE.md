@@ -23,24 +23,27 @@ inventory matched all eight expected session/subject pairs. The subsequent
 planning retry identified a missing/mismatched `totalRecords` refusal at a scan
 resource file catalog. The corrected collector uses the documented all-files
 response contract in auto mode and still rejects conflicting reported totals.
-The next gate is **successful live planning with the corrected build**.
-No live xnatR archive downloads or authenticated acceptance run have occurred.
+Live planning completed at 2026-11-05T00:49:19Z under `96fc105`; the saved plan
+passed an independent local review at the next status check. It covers eight
+sessions, 241 scans/resources, 13,715 files and 28,731,975,360 uncompressed bytes,
+with zero excluded scans. The next gate is **interruption and verified restart
+of the same frozen plan**. No live xnatR archive downloads have started.
 
 ## Next steps
 
-1. Run the prepared Terminal launcher with `--plan-only` and enter credentials
-   locally. It verifies the saved inventory receipt and rechecks live source
-   membership, metadata and catalogs while planning. The all-project discovery
-   component remains unqualified.
-2. Review the saved DICOM plan, catalogs, counts, sizes and separate destinations.
-3. Complete one resource, interrupt another, and restart the same full plan in a
-   separate destination; prove verified resources are not downloaded again.
-4. Require whole-selection completeness and an all-reuse rerun.
-5. Record qualification evidence, commit any fixes and prepare the release or PR.
+1. Prepare the execution launcher for the reviewed, saved full plan. Retain its
+   exact fingerprint and separate qualification destination; do not rediscover
+   or substitute a pilot plan. The all-project discovery component remains
+   unqualified.
+2. Complete one resource, interrupt another, and restart that same full plan;
+   prove verified resources are not downloaded again.
+3. Require whole-selection completeness and an all-reuse rerun.
+4. Record qualification evidence, commit any fixes and prepare the release or PR.
 
 The [qualification receipt](QUALIFICATION-2026-11-04.md) records the source and
 artifact hashes, isolated environment, evidence paths and launcher. Live steps
-2-6 remain open. The existing downloader and its artifacts remain untouched.
+4-6 remain open, along with the all-project portion of step 2. Step 3 passed.
+The existing downloader and its artifacts remain untouched.
 
 ## Historical roadmap
 
@@ -63,5 +66,9 @@ launcher prints source `96fc105` and `--plan-only` retains the inventory's origi
 `6e80224` provenance. A checked compatibility record confirms the inventory
 function and all 274 retained collection routes are unaffected by the file-catalog
 change. Planning still rechecks the live source under the new revision. The
-original all-project HTTP 403 remains unresolved. No live plan or archive
-execution has completed. No push, PR or release has occurred.
+original all-project HTTP 403 remains unresolved. Live planning and saved-plan
+review have now passed; archive execution remains pending. The plan fingerprint
+is `795b525309b28868849a1cda41b3a6a7f3da2719b7cad7f0a3ce55c2364d2ee7`.
+Private evidence is `private/discovery-receipt.json`, `private/reviewed-plan.json`
+and `private/plan-review.json` in the qualification workspace. No push, PR or
+release has occurred.

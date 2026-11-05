@@ -1,7 +1,7 @@
 # Live qualification: eight-session discovery-to-verified-download workflow
 
 Recorded and resumed: 2026-11-04. Status: **source frozen and locally validated;
-confirmed-project discovery complete; live planning failed and remains open**.
+confirmed-project discovery and live plan review complete; archive execution pending**.
 
 All three implementation tranches are locally delivered. The frozen implementation
 at `96fc10517b0dfb70bbaade852f2ba4f1d7de28f2` has 795 passing installed-package
@@ -17,9 +17,9 @@ step 1 and authentication in step 2. All-project discovery stopped with HTTP 403
 the failed endpoint was not captured. The next attempt is explicitly scoped to
 the owner-confirmed project, retaining strict completeness inside that scope.
 That scoped attempt subsequently completed discovery and matched all eight
-expected session/subject pairs, but planning failed with `xnatR_inventory_error`.
-This does not qualify the original all-project discovery component. No live
-download has started.
+expected session/subject pairs. After the file-catalog correction, live planning
+and saved-plan review passed. This does not qualify the original all-project
+discovery component. No live download has started.
 
 ## Scope and protection of existing work
 
@@ -56,7 +56,7 @@ references only, never passwords, tokens, cookies or participant payloads.
   associations with the existing owner-confirmed selection. Retain unknowns and
   failures explicitly; do not guess or weaken completeness checks.
 
-- [ ] **3. Save and review the exact eight-session plan.** Use
+- [x] **3. Save and review the exact eight-session plan.** Use
   `xnat_plan_download()` and `xnat_write_plan()` to freeze the selection in the
   separate qualification destination. Inspect all eight canonical session IDs,
   subject membership, selected scans, DICOM resource IDs, complete file catalogs,
@@ -139,12 +139,15 @@ source revision. Until that evidence exists, live qualification remains open.
   at a scan-resource files endpoint. The corrected build recognizes the documented
   all-files response when a total is absent, while rejecting supplied contradictory
   totals, duplicate URIs and malformed responses. Other collection pagination
-  retains its strict rules. Live acceptance of this revision remains pending.
-- Live plan fingerprint, interruption/reuse evidence,
-  live transfer counts and final xnatR summary: **not yet established**.
-- Next action: use the prepared Terminal launcher with `--plan-only`. It checks
-  the saved inventory hash, selected identities and source revision, then runs
-  the existing planner with full live source rechecks. Allowlisted validation
-  messages now appear in private diagnostics and the console. All-project
-  discovery remains an open gate.
-  archive execution follows review under steps 3-5. No credentials belong in chat.
+  retains its strict rules. That revision subsequently completed live planning
+  at 2026-11-05T00:49:19Z. The saved JSON passed package validation and independent
+  identity, selection, receipt, destination and integer-total checks.
+- Reviewed plan: eight sessions, 241 scans/resources, 13,715 files,
+  28,731,975,360 uncompressed bytes and zero excluded scans. Fingerprint:
+  `795b525309b28868849a1cda41b3a6a7f3da2719b7cad7f0a3ce55c2364d2ee7`.
+  Evidence: `private/discovery-receipt.json`, `private/reviewed-plan.json` and
+  `private/plan-review.json` in the qualification workspace.
+- Interruption/reuse evidence, live transfer counts and final xnatR summary:
+  **not yet established**. No qualification archive directory exists yet.
+- Next action: prepare execution of this exact saved plan, then follow steps 4-5.
+  All-project discovery remains an open gate. No credentials belong in chat.
