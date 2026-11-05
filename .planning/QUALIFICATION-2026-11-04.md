@@ -53,16 +53,17 @@ Credential-free diagnostics using the frozen installed package reached the serve
 through system curl with TLS verification enabled and HTTP 401. httr2 reported a
 network failure. No root cause or authenticated access is established by this test.
 
-Run this prepared launcher in macOS Terminal and enter credentials there:
+Current next action: resume planning in macOS Terminal and enter credentials there:
 
 ```sh
-/private/tmp/xnatr-live-qualification-20261104/discover.command
+/private/tmp/xnatr-live-qualification-20261104/discover.command --plan-only
 ```
 
-It reads the existing private reference selections, checks their agreement,
-discovers date-filtered sessions within the owner-confirmed project through R, compares
-canonical session/subject associations, and creates a plan for a separate private
-destination. It does not start archive transfers. Credentials are not written to
+It reads the existing private reference selections, checks their agreement, and
+verifies the saved inventory receipt before planning with live source rechecks.
+Without `--plan-only`, it performs fresh confirmed-project discovery first.
+It creates a plan for a separate private destination and does not start archive
+transfers. Credentials are not written to
 files or command arguments. Review the exact saved plan before proceeding through
 the interruption/restart and completeness steps in LIVE-QUALIFICATION.md.
 
@@ -129,3 +130,33 @@ condition secrets are excluded; private records use mode 0600; source-change
 errors retain their class. R and shell syntax checks also passed. Evidence is in
 `evidence/discovery-scope-repair/` in the qualification workspace. Live scoped
 discovery still requires the user's next login and has not been claimed successful.
+
+## Confirmed-project inventory and planning failure
+
+The subsequent live scoped run completed inventory for eight sessions and 241
+scans, with 241 DICOM and 241 snapshot resources. Independent comparison of its
+saved inventory against the private selection confirmed all eight canonical
+session/subject pairs. A hash receipt binds the inventory bytes, reference selection
+and frozen package revision. These artifacts remain private.
+
+The run then failed during planning with `xnatR_inventory_error` at
+2026-11-05T00:09:21Z. The previous diagnostic wrapper omitted the validation message,
+so the precise reason cannot be recovered from that attempt. An offline replay
+using historical cached catalogs and the current inventory completed planning for
+241 resources/13,715 files. This is diagnostic replay only: it neither establishes
+the cause of the live failure nor proves current live catalog completeness. No
+offline plan was substituted for the failed live plan.
+
+The launcher now prints and records only allowlisted validation messages from
+the frozen package, with private collection/planning context. Arbitrary condition
+messages remain excluded. The new `--plan-only` option verifies the saved inventory
+hash, selection fingerprint and source revision, then invokes the unchanged
+planner, including all live membership, metadata, resource and catalog rechecks.
+Inventory history is retained. It does not relax source-change or pagination rules.
+
+Fifteen synthetic checks passed for resume binding, tampered inventory/selection/
+revision refusal, history retention, live metadata-change refusal, precise static
+validation messages and exclusion of arbitrary secret-bearing messages. All 23
+previous scope/privacy checks also passed. R and shell syntax checks passed.
+Evidence: `evidence/planning-diagnosis/` in the qualification workspace. The frozen
+package source and installed artifact are unchanged; live planning remains open.
