@@ -417,6 +417,14 @@ page size. Overlaps, changing totals and exhausted page budgets are errors. The
 requiring `totalRecords` to match and previously observed rows to agree. Use
 `pagination = "paged"` to forbid that fallback or `"all"` to request it explicitly.
 This follows the documented [XNAT paging contract](https://wiki.xnat.org/xnat-api/paging-restful-tables).
+In `auto` mode, scan-resource file catalogs use XNAT's separate
+[all-files listing contract](https://wiki.xnat.org/xnat-api/image-scan-resource-api):
+one explicit `limit=*` request, recognizing `title = "Files"` when `totalRecords`
+is absent. If a total is supplied it must match the returned file count. This
+endpoint-specific rule does not apply to other tables, filtered collections, or
+explicit `paged`/`all` modes. Catalog completeness relies on that all-files API
+contract; optional resource counts/sizes and later ZIP-member verification add
+independent consistency checks. Duplicate URIs and malformed responses are errors.
 Completeness refers to accessible collections at query time; XNAT does not provide
 an atomic snapshot across these calls. Any request failure aborts the inventory.
 

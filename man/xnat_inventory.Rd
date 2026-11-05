@@ -33,7 +33,10 @@ type or series description. Retains matching sessions and all their scans.}
 
 \item{pagination}{\code{auto} tries pages and checks a legacy \verb{limit=*} fallback
 when paging is ignored. \code{paged} refuses ignored paging; \code{all} requires an
-unpaged response whose totalRecords matches the returned row count.}
+unpaged response whose totalRecords matches the returned row count.
+In \code{auto} mode, planning and execution use the scan-resource all-files
+endpoint contract for file catalogs; a recognized Files response may omit
+totalRecords, but any reported total must match the returned file count.}
 
 \item{max_pages}{Maximum requests per paged collection before refusing completion.}
 }

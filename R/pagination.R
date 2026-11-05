@@ -68,6 +68,25 @@ xnat_collect <- function(path, key = "ID", client = NULL, page_size = 100L,
     attr(rows, "pagination") <- list(path = path, mode = mode, requests = requests, rows = nrow(rows))
     rows
   }
+  # The scan-resource files endpoint is an all-files listing, not a paged search
+  # table. Its documented Files response omits totalRecords. Keep this exception
+  # restricted to the exact endpoint used by planning/execution and auto mode.
+  # https://wiki.xnat.org/xnat-api/image-scan-resource-api
+  if (pagination == "auto" && identical(key, "URI") && !length(query) &&
+      grepl("^data/experiments/[^/?#]+/scans/[^/?#]+/resources/[^/?#]+/files$", path)) {
+    json <- xnat_get(path, query = list(limit = "*"), client = client)
+    if (!is.list(json$ResultSet) || is.null(json$ResultSet$Result) ||
+        (is.null(json$ResultSet$totalRecords) && !identical(json$ResultSet$title, "Files"))) {
+      inventory_abort("Unrecognized scan resource file catalog response.")
+    }
+    rows <- parse_xnat_result(json)
+    if (nrow(rows)) rows[[key]] <- inventory_ids(rows, key)
+    total <- inventory_total(json)
+    if (!is.null(total) && total != nrow(rows)) {
+      inventory_abort("File catalog totalRecords disagrees with the returned row count.")
+    }
+    return(finish(rows, "resource_files", 1L))
+  }
   all_rows <- function(previous = NULL, requests = 0L) {
     result <- inventory_page(path, utils::modifyList(query, list(limit = "*", offset = 0)), key, client)
     if (is.null(result$total) || result$total != nrow(result$rows)) {

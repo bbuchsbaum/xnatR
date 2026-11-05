@@ -17,6 +17,9 @@
 #' @param pagination `auto` tries pages and checks a legacy `limit=*` fallback
 #'   when paging is ignored. `paged` refuses ignored paging; `all` requires an
 #'   unpaged response whose totalRecords matches the returned row count.
+#'   In `auto` mode, planning and execution use the scan-resource all-files
+#'   endpoint contract for file catalogs; a recognized Files response may omit
+#'   totalRecords, but any reported total must match the returned file count.
 #' @param max_pages Maximum requests per paged collection before refusing completion.
 #' @return An `xnat_inventory` list of projects, subjects, sessions, scans,
 #'   scan resources, filters and collection traversal evidence. Participant session

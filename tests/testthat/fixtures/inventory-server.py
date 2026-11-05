@@ -70,7 +70,11 @@ class Handler(BaseHTTPRequestHandler):
             return
         limit = query.get('limit', ['*'])[0]
         result = {'Result': rows}
-        if legacy or limit == '*':
+        if path.endswith('/files'):
+            # Scan-resource files are a non-paged listing. The documented
+            # response has title=Files but does not include totalRecords.
+            result['title'] = 'Files'
+        elif legacy or limit == '*':
             result['totalRecords'] = str(len(rows))
         else:
             offset = int(query.get('offset', ['0'])[0])
