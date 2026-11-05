@@ -117,7 +117,7 @@ xnat_search <- function(root_type, fields, criteria = NULL, format = "json", cli
     httr2::req_url_query(format = format) |>
     httr2::req_body_raw(xml, type = "text/xml")
 
-  resp <- httr2::req_perform(req)
+  resp <- xnat_perform(req, client = client)
 
   if (format == "json") {
     json <- httr2::resp_body_json(resp)
@@ -451,7 +451,7 @@ execute_search_xml <- function(xml, format = "json", conn = NULL) {
     httr2::req_url_query(format = format) |>
     httr2::req_body_raw(xml, type = "text/xml")
 
-  resp <- httr2::req_perform(req)
+  resp <- xnat_perform(req, client = conn)
 
   if (identical(format, "json")) {
     parse_xnat_result(httr2::resp_body_json(resp))

@@ -5,8 +5,8 @@
 \title{List Scans for an Experiment}
 \usage{
 list_scans(
-  project_id,
-  subject_id,
+  project_id = NULL,
+  subject_id = NULL,
   experiment_id,
   columns = NULL,
   limit = NULL,
@@ -15,9 +15,10 @@ list_scans(
 )
 }
 \arguments{
-\item{project_id}{The project identifier (required).}
+\item{project_id}{Optional project identifier.}
 
-\item{subject_id}{The subject identifier (required).}
+\item{subject_id}{Optional subject identifier. If omitted, uses the experiment-scoped route;
+experiment_id must then be a canonical experiment ID.}
 
 \item{experiment_id}{The experiment identifier (required).}
 

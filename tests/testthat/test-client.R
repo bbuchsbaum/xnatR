@@ -155,7 +155,7 @@ test_that("xnat_connect can establish anonymous jsession", {
       resolve_credentials = function(base_url = NULL, username = NULL, password = NULL) {
         list(base_url = base_url, username = username, password = password)
       },
-      establish_anonymous_jsession = function(base_url, ssl_verify = TRUE) {
+      establish_anonymous_jsession = function(base_url, ssl_verify = TRUE, backend = "httr2") {
         expect_equal(base_url, "https://test.xnat.org")
         "anon_jsession"
       },

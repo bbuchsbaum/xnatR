@@ -15,23 +15,29 @@ URL: https://github.com/bbuchsbaum/xnatR
 BugReports: https://github.com/bbuchsbaum/xnatR/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Depends:
     R (>= 4.1.0)
 Imports:
     httr2 (>= 1.0.0),
+    processx,
+    digest,
+    zip (>= 3.0.0),
+    filelock,
     jsonlite,
     tibble,
     yaml,
     cli,
     rlang
 Suggests:
+    getPass,
     testthat (>= 3.0.0),
     httptest2,
     withr,
     pkgload,
     knitr,
     rmarkdown
-SystemRequirements: fzf (optional, for the xnat_explore() terminal browser)
+SystemRequirements: fzf (optional, for the xnat_explore() terminal browser),
+    unzip (for verified download execution)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
+Config/roxygen2/version: 8.1.1

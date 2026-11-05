@@ -31,6 +31,46 @@ client <- xnat_connect(
 )
 ```
 
+## Discover an unknown project and freeze a selection
+
+Use the complete inventory interface when discovering a dataset rather than
+requesting a single page from a known project.
+
+```{r discovery-plan}
+inventory <- xnat_inventory(
+  date_from = "2026-02-01", date_to = "2026-03-31", client = client
+)
+inventory$sessions
+inventory$scans
+
+# Replace these synthetic IDs only after reviewing the candidate sessions.
+plan <- xnat_plan_download(
+  inventory, experiment_ids = c("XNAT_E00001", "XNAT_E00002"),
+  dest_dir = "~/Downloads/dicom-archives", client = client
+)
+plan$scans
+plan$resources
+xnat_write_plan(plan, "reviewed-selection.json")
+restored <- xnat_read_plan("reviewed-selection.json")
+```
+
+Unknown dates remain visible by default, and unknown subject associations are
+explicit. A plan refuses unresolved subjects, changed selections, and incomplete
+file catalogs. It captures exact DICOM resource IDs, expected file counts, byte
+sizes, catalog fingerprints and destination paths without downloading image data.
+Execute or restart the frozen plan with:
+
+```{r execute-plan}
+result <- xnat_execute_plan(restored, client = client, download_timeout = 3600)
+result$resources
+stopifnot(result$complete)
+```
+
+Reruns recheck source catalogs and reuse only verified archives with matching
+receipts. Failed partials are retained. Inspect `complete` and the per-plan run
+summary rather than inferring completion from existing archive files. The older
+download recipes below do not consume plans or publish integrity receipts.
+
 ## Find recent sessions and download three subjects
 
 You have a project ID and want to grab the newest data.

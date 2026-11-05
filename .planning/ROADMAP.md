@@ -1,5 +1,22 @@
 # Roadmap: xnatR
 
+## Current workflow milestone (2026-11-04)
+
+The transport/authentication, inventory/planning and verified-execution tranches
+are locally implemented and tested. The active next milestone is the
+[eight-session live qualification plan](LIVE-QUALIFICATION.md): freeze the source,
+install in an isolated R library, discover through R/system curl, save the exact
+selection, demonstrate interruption/reuse, establish whole-selection completeness,
+and prepare delivery after recording qualification evidence. Protect the existing
+downloader and use a separate destination. Source freezing, isolated installation
+and local validation are complete; credential-free system-curl diagnostics passed.
+Authenticated discovery and all live transfer acceptance steps remain pending.
+See the [qualification receipt](QUALIFICATION-2026-11-04.md).
+
+The original phases below are retained as a historical broader roadmap; their
+old completion counts are not the current workflow status and have not been
+requalified requirement by requirement. See [STATE.md](STATE.md) for the handoff.
+
 ## Overview
 
 Building on existing basic auth and listing functions, this roadmap completes the comprehensive R client for XNAT REST API. Four phases deliver robust authentication with multiple credential sources, complete query and discovery capabilities, powerful XML search functionality, and enhanced download operations with package quality improvements for CRAN release.
