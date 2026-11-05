@@ -5,10 +5,12 @@ Updated: 2026-11-04.
 ## Current focus
 
 The three discovery-to-verified-download implementation tranches are frozen at
-`6e80224a001027fad4fcbacbd311bd5c4a9452d4` and installed in an isolated library.
-Installed-package validation: 775 passing assertions, one real-fzf skip, no test
+`96fc10517b0dfb70bbaade852f2ba4f1d7de28f2` and installed in a new isolated library.
+Installed-package validation: 795 passing assertions, one real-fzf skip, no test
 failures/errors/warnings; package check Status: OK with tests run separately.
 Source changes now stop execution even with `continue_on_error = TRUE`.
+The previous `6e80224` build and evidence remain preserved. See the
+[catalog-fix receipt](QUALIFICATION-CATALOG-FIX-2026-11-04.md).
 
 Step 1 of [LIVE-QUALIFICATION.md](LIVE-QUALIFICATION.md) is complete. Step 2 has
 passed credential-free system-curl connectivity with TLS enabled and HTTP 401;
@@ -17,9 +19,11 @@ authenticate R, but all-project discovery stopped with HTTP 403. Its original
 failure record lacks an endpoint, so the denied request remains unidentified.
 The subsequent confirmed-project run completed authenticated discovery: eight
 sessions, 241 scans, and 241 DICOM resources. Independent comparison of the saved
-inventory matched all eight expected session/subject pairs. Planning then failed
-with `xnatR_inventory_error`; its exact reason was not retained by the earlier
-diagnostic wrapper. The next gate is **successful live planning**.
+inventory matched all eight expected session/subject pairs. The subsequent
+planning retry identified a missing/mismatched `totalRecords` refusal at a scan
+resource file catalog. The corrected collector uses the documented all-files
+response contract in auto mode and still rejects conflicting reported totals.
+The next gate is **successful live planning with the corrected build**.
 No live xnatR archive downloads or authenticated acceptance run have occurred.
 
 ## Next steps
@@ -54,9 +58,10 @@ discovery launcher initially failed before login because its processx child coul
 not open `/dev/tty`; the callback incorrectly returned cancellation. The repaired
 launcher passed five synthetic-terminal tests, including hidden password entry,
 interruptions and distinct missing-terminal errors. Its command path is unchanged.
-The next user attempt authenticated but discovery returned HTTP 403. Explicit
-project scope subsequently completed inventory and exact identity reconciliation,
-then planning failed. The launcher now retains allowlisted package validation
-messages and can resume planning from a hash-checked inventory. Fifteen new checks
-and 23 scope/privacy regression checks passed. The saved live inventory is retained;
-no live plan or archive execution has completed. No push, PR or release has occurred.
+The collector fix is committed, built, installed and locally validated. The
+launcher prints source `96fc105` and `--plan-only` retains the inventory's original
+`6e80224` provenance. A checked compatibility record confirms the inventory
+function and all 274 retained collection routes are unaffected by the file-catalog
+change. Planning still rechecks the live source under the new revision. The
+original all-project HTTP 403 remains unresolved. No live plan or archive
+execution has completed. No push, PR or release has occurred.

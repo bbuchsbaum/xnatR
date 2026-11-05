@@ -4,11 +4,13 @@ Recorded and resumed: 2026-11-04. Status: **source frozen and locally validated;
 confirmed-project discovery complete; live planning failed and remains open**.
 
 All three implementation tranches are locally delivered. The frozen implementation
-at `6e80224a001027fad4fcbacbd311bd5c4a9452d4` has 775 passing installed-package
+at `96fc10517b0dfb70bbaade852f2ba4f1d7de28f2` has 795 passing installed-package
 assertions, one real-fzf test skipped, and a package check with Status: OK (tests
 run separately). These are local results, not acceptance on the private server.
 See [the qualification receipt](QUALIFICATION-2026-11-04.md) for the artifact hash,
 environment, regression fix, evidence locations and credential-entry launcher.
+The [catalog-fix receipt](QUALIFICATION-CATALOG-FIX-2026-11-04.md) records the
+current build, endpoint-specific correction and retained inventory provenance.
 
 The original handoff recorded the agreed sequence. The resumed work completed
 step 1 and authentication in step 2. All-project discovery stopped with HTTP 403;
@@ -113,10 +115,11 @@ source revision. Until that evidence exists, live qualification remains open.
 
 ## Current evidence and next action
 
-- Source freeze and isolated installation: complete. Installed-package tests:
-  775 passed, one fzf skip, no failures, errors or warnings. `R CMD check
-  --no-manual --no-tests`: Status: OK; both vignettes built successfully.
-- Credential-free diagnostics on that installed build: system curl reaches the
+- Source freeze and isolated installation: complete for the corrected `96fc105`
+  build. Installed-package tests: 795 passed, one fzf skip, no failures, errors or
+  warnings. `R CMD check --no-manual --no-tests`: Status: OK; both vignettes built
+  successfully.
+- Credential-free diagnostics on the original `6e80224` build: system curl reaches the
   server with TLS verified and HTTP 401; httr2 reports a network failure. This
   establishes reachability only, not authenticated access or a diagnosed root cause.
 - Existing downloader: its current private summary reports completion for eight
@@ -132,6 +135,11 @@ source revision. Until that evidence exists, live qualification remains open.
 - Live planning then failed with `xnatR_inventory_error`. The original diagnostic
   omitted the validation reason. Offline replay with historical catalogs passed,
   which neither explains the live failure nor qualifies those catalogs as current.
+- The next live retry identified the exact refusal: missing/mismatched totalRecords
+  at a scan-resource files endpoint. The corrected build recognizes the documented
+  all-files response when a total is absent, while rejecting supplied contradictory
+  totals, duplicate URIs and malformed responses. Other collection pagination
+  retains its strict rules. Live acceptance of this revision remains pending.
 - Live plan fingerprint, interruption/reuse evidence,
   live transfer counts and final xnatR summary: **not yet established**.
 - Next action: use the prepared Terminal launcher with `--plan-only`. It checks

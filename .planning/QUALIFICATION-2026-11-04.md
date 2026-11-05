@@ -2,6 +2,10 @@
 
 Recorded: 2026-11-04. Authenticated live acceptance remains open.
 
+Current active build: `96fc105`; see the
+[catalog protocol correction receipt](QUALIFICATION-CATALOG-FIX-2026-11-04.md).
+The original build and validation below remain historical evidence.
+
 ## Frozen implementation
 
 - Implementation commit: `6e80224a001027fad4fcbacbd311bd5c4a9452d4`.
