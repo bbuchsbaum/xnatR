@@ -1,4 +1,6 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
+import os
+import socketserver
 import json
 import sys
 
@@ -33,7 +35,18 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-server = HTTPServer(('127.0.0.1', 0), Handler)
-with open(sys.argv[1], 'w') as ready:
+class LoopbackServer(HTTPServer):
+    # HTTPServer.server_bind() resolves socket.getfqdn(host), a reverse-DNS
+    # lookup that can stall for a long time on macOS CI runners before the
+    # port is reported. A loopback fixture needs no server name lookup.
+    def server_bind(self):
+        socketserver.TCPServer.server_bind(self)
+        self.server_name = '127.0.0.1'
+        self.server_port = self.server_address[1]
+
+server = LoopbackServer(('127.0.0.1', 0), Handler)
+# Publish the port atomically so a reader never sees a partial write.
+with open(sys.argv[1] + '.tmp', 'w') as ready:
     ready.write(str(server.server_port))
+os.replace(sys.argv[1] + '.tmp', sys.argv[1])
 server.serve_forever()
