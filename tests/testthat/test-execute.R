@@ -8,14 +8,9 @@ executor_fixture <- function(code, backend = "curl") {
   control <- file.path(scratch, "control.json")
   writeLines(plan_json(inventory_fixture()), fixture)
   writeLines('{}', control)
-  proc <- processx::process$new(Sys.which("python3"),
-    c(test_path("fixtures", "inventory-server.py"), ready, fixture, "legacy", control), stdout = "|", stderr = "|")
-  on.exit(proc$kill(), add = TRUE)
-  for (i in seq_len(100)) {
-    if (file.exists(ready) && file.info(ready)$size > 0) break
-    Sys.sleep(0.05)
-  }
-  client <- xnat_client(paste0("http://127.0.0.1:", readLines(ready, warn = FALSE), "/xnat"), "u", "p", backend = backend)
+  server <- start_fixture_server("inventory-server.py", c(fixture, "legacy", control), ready)
+  on.exit(server$proc$kill(), add = TRUE)
+  client <- xnat_client(server$url, "u", "p", backend = backend)
   inv <- xnat_inventory(project_ids = "P", client = client)
   plan <- xnat_plan_download(inv, c("E1", "E2"), file.path(scratch, "archives"), client = client)
   downloads <- function() if (file.exists(paste0(control, ".downloads"))) readLines(paste0(control, ".downloads")) else character()
@@ -165,10 +160,7 @@ test_that("cross-process locks prevent writes and release on process termination
     proc <- processx::process$new(file.path(R.home("bin"), "Rscript"),
       c("--vanilla", "-e", script, lock_path, ready), stdout = "|", stderr = "|")
     on.exit({proc$kill(); unlink(ready)}, add = TRUE)
-    for (i in seq_len(100)) {
-      if (file.exists(ready)) break
-      Sys.sleep(0.05)
-    }
+    wait_for_file(ready, proc)
     expect_true(file.exists(ready))
     expect_error(xnat_execute_plan(plan, client, progress = FALSE), class = "xnatR_lock_error")
     expect_length(downloads(), 0L)
