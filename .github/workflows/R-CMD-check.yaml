@@ -1,0 +1,68 @@
+name: R-CMD-check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  R-CMD-check:
+    name: ${{ matrix.config.os }} (R ${{ matrix.config.r }})
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { os: ubuntu-latest, r: release }
+          - { os: macos-latest, r: release }
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      # Tests must never reach a real XNAT server; they use local fixtures.
+      XNATR_HOST: ""
+      XNATR_USER: ""
+      XNATR_PASS: ""
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # fzf runs the real-fzf explorer test; python3 and unzip back the local
+      # HTTP fixture servers and verified-download tests. Those tests skip when
+      # a tool is absent, so require all three to avoid a silently thinner run.
+      - name: Install fzf (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y fzf unzip
+      - name: Install fzf (macOS)
+        if: runner.os == 'macOS'
+        run: brew install fzf
+      - name: Require test tools
+        run: |
+          for tool in fzf python3 unzip; do
+            command -v "$tool" >/dev/null || { echo "::error::$tool is missing"; exit 1; }
+            echo "$tool: $(command -v "$tool")"
+          done
+
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          args: 'c("--no-manual")'
+          error-on: '"warning"'
+          upload-snapshots: true
