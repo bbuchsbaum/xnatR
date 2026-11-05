@@ -265,3 +265,55 @@ test_that("xnat_explore goes back up a level on abort, then exits", {
   )
   expect_null(xnat_explore(.interactive = TRUE, run_fn = runner))
 })
+
+# ---- issue #1: project-wide sessions whose listing omits subject fields -----
+
+# Minimal project-experiment row shape returned by XNAT 1.6.x without any of
+# subject_ID / subject_id / subject_label / subject. Synthetic identifiers only.
+subjectless_session <- function() {
+  row <- tibble::tibble(
+    project = "PROJECT_A", xsiType = "xnat:mrSessionData", ID = "XNAT_E_TEST",
+    label = "SESSION_A", date = "2026-02-26", URI = "/data/experiments/XNAT_E_TEST"
+  )
+  row[["xnat:subjectassessordata/id"]] <- "XNAT_E_TEST"
+  row
+}
+
+test_that("opening a session without subject fields keeps context and guesses no subject", {
+  levels <- xnatR:::.explore_levels()
+  ctx <- levels$experiments$on_open(subjectless_session(), list(project_id = "PROJECT_A"))
+  expect_identical(ctx, list(project_id = "PROJECT_A"))
+  expect_null(ctx$subject_id)
+})
+
+test_that("subject-scoped session opening still records the listed subject", {
+  levels <- xnatR:::.explore_levels()
+  ctx <- levels$experiments$on_open(mock_experiments(1)[1, , drop = FALSE], list(project_id = "P1"))
+  expect_equal(ctx$subject_id, "SUBJECT_1")
+})
+
+test_that("Ctrl-E then Enter on a subjectless session lists scans by experiment ID", {
+  seen_paths <- character()
+  local_mocked_bindings(
+    .fzf_available = function() TRUE,
+    list_subjects = function(project_id, ...) mock_subjects(2, project_id = project_id),
+    list_experiments = function(project_id, subject_id = NULL, ...) subjectless_session(),
+    xnat_get = function(path, query = NULL, client = NULL) {
+      seen_paths <<- c(seen_paths, path)
+      mock_resultset(mock_scans(2))
+    },
+    dicom_dump = function(...) mock_dicom_dump(),
+    .package = "xnatR"
+  )
+
+  runner <- fake_runner(
+    fzf_out(rows = 1, action = "ctrl-e"),   # all sessions in the project
+    fzf_out(rows = 1, action = ""),         # Enter: open the subjectless session
+    fzf_out(rows = 2, action = "ctrl-s")    # return scan 2
+  )
+  result <- xnat_explore(project_id = "PROJECT_A", .interactive = TRUE, run_fn = runner)
+
+  expect_equal(result$ID, "2")
+  expect_true("data/experiments/XNAT_E_TEST/scans" %in% seen_paths)
+  expect_false(any(grepl("/subjects/", seen_paths)))
+})

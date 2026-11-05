@@ -61,15 +61,9 @@ test_that("server URLs cannot carry credentials or query secrets", {
 
 test_that("both backends authenticate, encode queries, POST and stream identical bytes", {
   skip_if(Sys.which("python3") == "", "python3 unavailable")
-  ready <- tempfile()
-  proc <- processx::process$new(Sys.which("python3"),
-    c(test_path("fixtures", "transport-server.py"), ready), stdout = "|", stderr = "|")
-  on.exit({ proc$kill(); unlink(ready) }, add = TRUE)
-  for (i in seq_len(100)) {
-    if (file.exists(ready) && file.info(ready)$size > 0) break
-    Sys.sleep(0.05)
-  }
-  url <- paste0("http://127.0.0.1:", readLines(ready, warn = FALSE), "/xnat")
+  server <- start_fixture_server("transport-server.py")
+  on.exit({ server$proc$kill(); unlink(server$ready) }, add = TRUE)
+  url <- server$url
   for (backend in c("httr2", "curl")) {
     client <- xnat_client(url, username = "test", password = 'quote"slash\\password', backend = backend)
     response <- xnat_get("echo", list(value = "a & b"), client)

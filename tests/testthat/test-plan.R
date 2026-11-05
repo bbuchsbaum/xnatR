@@ -109,14 +109,9 @@ test_that("both transports discover and save plans on paged and legacy loopback 
   writeLines(plan_json(inventory_fixture()), fixture)
   for (mode in c("paged", "legacy")) {
     ready <- file.path(scratch, paste0(mode, "-port"))
-    proc <- processx::process$new(Sys.which("python3"),
-      c(test_path("fixtures", "inventory-server.py"), ready, fixture, mode), stdout = "|", stderr = "|")
+    server <- start_fixture_server("inventory-server.py", c(fixture, mode), ready)
     tryCatch({
-      for (i in seq_len(100)) {
-        if (file.exists(ready) && file.info(ready)$size > 0) break
-        Sys.sleep(0.05)
-      }
-      url <- paste0("http://127.0.0.1:", readLines(ready, warn = FALSE), "/xnat")
+      url <- server$url
       for (backend in c("httr2", "curl")) {
         client <- xnat_client(url, "synthetic", "synthetic", backend = backend)
         inv <- xnat_inventory(date_from = "2026-02-01", date_to = "2026-03-31",
@@ -129,7 +124,7 @@ test_that("both transports discover and save plans on paged and legacy loopback 
         expect_equal(xnat_read_plan(path)$resources, plan$resources)
         expect_false(dir.exists(plan$destination_root))
       }
-    }, finally = proc$kill())
+    }, finally = server$proc$kill())
   }
 })
 

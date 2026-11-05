@@ -74,3 +74,20 @@ test_that("print.xnat_scans shows full context", {
 
   clear_test_auth()
 })
+
+test_that("list_scans without a subject uses the experiment-scoped route", {
+  setup_test_auth()
+  local_mocked_bindings(
+    xnat_get = function(path, query = NULL, client = NULL) {
+      expect_identical(path, "data/experiments/XNAT_E_TEST/scans")
+      mock_resultset(mock_scans(2))
+    },
+    .package = "xnatR"
+  )
+  result <- list_scans(project_id = "PROJECT_A", experiment_id = "XNAT_E_TEST")
+  expect_equal(nrow(result), 2)
+  expect_null(attr(result, "subject_id"))
+  expect_equal(attr(result, "experiment_id"), "XNAT_E_TEST")
+  expect_no_error(suppressMessages(capture.output(print(result))))
+  clear_test_auth()
+})
